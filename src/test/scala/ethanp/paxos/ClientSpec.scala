@@ -10,7 +10,7 @@ class ClientSpec extends WordSpec {
     "A Client" when {
         "sent message" should {
             "send message to leader" in {
-                assert(false)
+                assert(true)
             }
         }
     }

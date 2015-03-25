@@ -98,14 +98,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
 
     def init()
 
-    def handle(msg: Msg) {
-        msg match {
-            case Preempted =>
-            case PrintLog =>
-            case AllClear =>
-            case Crash =>
-            case CrashAfter(numMsgs) =>
-            case nc: NodeConnection =>
-        }
-    }
+    def handle(msg: Msg): Unit
+
+    def broadcast(buffs: Iterable[MsgBuff], msg: Msg) = buffs foreach (_ send msg)
 }
