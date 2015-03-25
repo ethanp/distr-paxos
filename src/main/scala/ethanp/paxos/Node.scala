@@ -14,6 +14,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
     val listenPort = 3000 + nodeIdx
     val serverSocket = new ServerSocket(listenPort)
     val msgBuffs = mutable.Queue[MsgBuff]()
+    start()
 
     def start() {
         alive = true

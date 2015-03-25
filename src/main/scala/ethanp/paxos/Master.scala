@@ -2,16 +2,31 @@ package ethanp.paxos
 
 import java.util.Scanner
 
+import scala.collection.{GenTraversable, mutable}
+
 /**
  * Ethan Petuchowski 3/24/15
  */
 object Master {
 
-    val clients = Vector[Client]()
-    val servers = Vector[Server]()
-    val leaderIdx = 0
+    val clients = mutable.Map[Int, Client]()
+    val servers = mutable.Map[Int, Server]()
+    val leaderID = 1
+    val masterID = 0
 
-    def startAllNodes(numServers: Int, numClients: Int) = ???
+    def startAllNodes(numServers: Int, numClients: Int) {
+        (1 to numServers).foreach { i ⇒
+            val server: Server = new Server(i)
+            servers.put(i, server)
+            new Thread(server).start()
+        }
+
+        (1 to numClients).foreach { i ⇒
+            val client: Client = new Client(i)
+            clients.put(i, client)
+            new Thread(client).start()
+        }
+    }
 
     def send(node: Node, msg: Msg): Unit = ???
 
@@ -21,7 +36,7 @@ object Master {
 
     def sendServerMsg(i: Int, msg: Msg) = send(servers(i), msg)
 
-    def broadcast(nodes: Vector[Node], msg: Msg) = nodes.foreach(n ⇒ send(n, msg))
+    def broadcast(nodes: GenTraversable[Node], msg: Msg) = nodes.foreach(n ⇒ send(n, msg))
 
 
     /* expects usage COMMAND < testFile.test */
@@ -64,7 +79,7 @@ object Master {
                  * of them
                  */
                 case "allClear" ⇒
-                    broadcast(clients ++ servers, AllClear)
+                    broadcast(clients.values ++ servers.values, AllClear)
                     ???
 
                 /* Immediately crash the server specified by nodeIndex */
@@ -83,7 +98,7 @@ object Master {
                  */
                 case "timeBombLeader" ⇒
                     val numMsgs: Int = inputLine(1).toInt
-                    sendServerMsg(leaderIdx, CrashAfter(numMsgs))
+                    sendServerMsg(leaderID, CrashAfter(numMsgs))
             }
         }
     }
