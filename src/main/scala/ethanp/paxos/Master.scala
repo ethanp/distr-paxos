@@ -9,13 +9,27 @@ object Master {
 
     val clients = Vector[Client]()
     val servers = Vector[Server]()
+    val leaderIdx = 0
 
+    def startAllNodes(numServers: Int, numClients: Int) = ???
+
+    def send(node: Node, msg: Msg): Unit = ???
+
+    def sendClientStrMsg(clientIndex: Int, s: String): Unit = ???
+
+    def sendClientMsg(clientIdx: Int, msg: Msg) = send(clients(clientIdx), msg)
+
+    def sendServerMsg(i: Int, msg: Msg) = send(servers(i), msg)
+
+    def broadcast(nodes: Vector[Node], msg: Msg) = nodes.foreach(n ⇒ send(n, msg))
+
+
+    /* expects usage COMMAND < testFile.test */
     def main(args: Array[String]) {
         val scan: Scanner = new Scanner(System.in)
         while (scan.hasNextLine) {
             val inputLine: Array[String] = scan.nextLine.split(" ")
-            var clientIndex: Int = 0
-            var nodeIndex: Int = 0
+
             System.out.println(inputLine(0))
             inputLine(0) match {
 
@@ -26,53 +40,51 @@ object Master {
                 case "start" ⇒
                     val numServers = inputLine(1).toInt
                     val numClients = inputLine(2).toInt
-                    start(numServers, numClients)
+                    startAllNodes(numServers, numClients)
 
                 /*
                  * Instruct the client specified by clientIndex to send the message
                  * to the proper paxos node
                  */
                 case "sendMessage" ⇒
-                    sendMsg(inputLine(1).toInt, inputLine.drop(2).mkString(" "))
+                    val clientIndex: Int = inputLine(1).toInt
+                    sendClientStrMsg(clientIndex, inputLine.drop(2).mkString(" "))
 
-                /* TODO
+                /*
                  * Print out the client specified by clientIndex's chat history
                  * in the format described on the handout.
                  */
                 case "printChatLog" ⇒
-                    clientIndex = inputLine(1).toInt
-                    sendClientMsg(inputLine(2).toInt, PrintLog)
-                case "allClear" ⇒
+                    val clientIndex = inputLine(1).toInt
+                    sendClientMsg(clientIndex, PrintLog)
+
                 /* TODO
-                 * Ensure that this blocks until all messages that are going to
-                 * come to consensus in PAXOS do, and that all clients have heard
+                 * Ensure that this BLOCKS until all messages that are going to
+                 * come to consensus in paxos do, and that all clients have heard
                  * of them
                  */
+                case "allClear" ⇒
+                    broadcast(clients ++ servers, AllClear)
+                    ???
+
+                /* Immediately crash the server specified by nodeIndex */
                 case "crashServer" ⇒
-                    nodeIndex = inputLine(1).toInt
-                /* TODO Immediately crash the server specified by nodeIndex */
-                case "restartServer" ⇒
-                    nodeIndex = inputLine(1).toInt
+                    val nodeIndex = inputLine(1).toInt
+                    sendServerMsg(nodeIndex, Crash)
+
                 /* TODO Restart the server specified by nodeIndex */
-                case "timeBombLeader" ⇒
-                    val numMessages: Int = inputLine(1).toInt
-                /* TODO
+                case "restartServer" ⇒
+                    val nodeIndex = inputLine(1).toInt
+                    ???
+
+                /*
                  * Instruct the leader to crash after sending the number of paxos
                  * related messages specified by numMessages
                  */
+                case "timeBombLeader" ⇒
+                    val numMsgs: Int = inputLine(1).toInt
+                    sendServerMsg(leaderIdx, CrashAfter(numMsgs))
             }
         }
-    }
-
-    def start(numServers: Int, numClients: Int) {
-    }
-
-    def sendMsg(clientIdx: Int, str: String) {
-    }
-
-    def send(node: Node, msg: Msg): Unit = ???
-
-    def sendClientMsg(clientIdx: Int, msg: Msg) {
-        send(clients(clientIdx), msg)
     }
 }

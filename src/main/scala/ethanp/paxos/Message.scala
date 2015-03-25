@@ -7,3 +7,6 @@ package ethanp.paxos
 sealed abstract class Msg
 case object Preempted extends Msg
 case object PrintLog extends Msg
+case object AllClear extends Msg
+case object Crash extends Msg
+case class CrashAfter(numMsgs: Int) extends Msg
