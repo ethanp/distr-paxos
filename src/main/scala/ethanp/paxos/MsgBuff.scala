@@ -9,7 +9,7 @@ import ethanp.system.Msg
  * Ethan Petuchowski
  * 3/24/15
  */
-case class MsgBuff(socket: Socket) {
+class MsgBuff(socket: Socket) {
     def this(port: Int) {
         this(new Socket("0.0.0.0", port))
     }
@@ -22,7 +22,9 @@ case class MsgBuff(socket: Socket) {
         oos.flush()
     }
 
-    def blockingReadMsg(): Option[Msg] = {
+    def blockTillMsgRcvd(): Msg = ois.readObject().asInstanceOf[Msg]
+
+    def readMsgIfAvailable(): Option[Msg] = {
 
         /* don't wait if there's nothing to wait for*/
         if (ois.available() == 0) return None

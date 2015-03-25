@@ -10,7 +10,7 @@ class Client(nodeIdx: Int) extends Node(nodeIdx) {
 
     override def restart(): Unit = ???
 
-    override def init(): Unit = ???
+    override def init() {}
 
     override def offset = Common.clientOffset
 

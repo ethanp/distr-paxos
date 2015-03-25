@@ -9,7 +9,7 @@ import org.scalatest.WordSpec
 class ClientSpec extends WordSpec {
     "A Client" when {
         "sent message" should {
-            "send message to leader" in {
+            "send proposal to all servers" in {
                 assert(true)
             }
         }

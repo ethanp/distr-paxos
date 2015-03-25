@@ -9,14 +9,12 @@ import ethanp.paxos.{Leader, Replica}
  */
 class Server(val nodeID: Int) extends Node(nodeID) {
 
-    val replica = new Replica()
-    val leader = new Leader()
+    val replica = new Replica(this)
+    val leader = new Leader(this)
 
     var crashAfter = -1
 
     override def restart(): Unit = ???
-
-    override def run(): Unit = ???
 
     override def init(): Unit = ???
 
@@ -34,7 +32,7 @@ class Server(val nodeID: Int) extends Node(nodeID) {
             case Preempted(ballot) => leader preempt ballot
             case PrintLog => replica.printLog()
             case AllClear => ???
-            case Crash => ???
+            case Crash => alive = false
             case CrashAfter(numMsgs) => crashAfter = numMsgs
             case p@Proposal(_,_) => replica propose p
             case _ => throw new RuntimeException("unexpected msg: "+msg)

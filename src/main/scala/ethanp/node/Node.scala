@@ -20,6 +20,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
     val serverBuffs = TrieMap[PID, MsgBuff]()
     val server = new NodeServer(listenPort)
     var serverThread : Thread = null
+    startListening()
 
     class NodeServer(listenPort:Int) extends Runnable {
         val serverSocket = new ServerSocket(listenPort)
@@ -27,8 +28,8 @@ abstract class Node(nodeIdx: Int) extends Runnable {
         override def run() {
             while (alive) {
                 val socket = serverSocket.accept()
-                val msgBuff = MsgBuff(socket)
-                val nc = msgBuff.blockingReadMsg().asInstanceOf[NodeConnection]
+                val msgBuff = new MsgBuff(socket)
+                val nc = msgBuff.blockTillMsgRcvd().asInstanceOf[NodeConnection]
                 nc match {
                     case ClientConnection(nodeId) => clientBuffs.put(nodeId, msgBuff)
                     case ServerConnection(nodeId) => serverBuffs.put(nodeId, msgBuff)
@@ -40,6 +41,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
     def startListening() {
         alive = true
         serverThread = new Thread(server)
+        println("node listening at "+server.serverSocket.getLocalPort)
         serverThread.start()
     }
 
@@ -88,7 +90,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
     /** get first waiting msg over all `msgBuffs` */
     def getMsg: Option[Msg] = {
         for (msgBuff ← clientBuffs.values ++ serverBuffs.values) {
-            msgBuff.blockingReadMsg() match {
+            msgBuff.readMsgIfAvailable() match {
                 case y@Some(_) ⇒ return y
                 case None ⇒ ; // I'm hoping this means "do nothing"
             }

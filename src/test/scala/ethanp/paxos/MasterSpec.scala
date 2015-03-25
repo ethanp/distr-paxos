@@ -1,5 +1,6 @@
 package ethanp.paxos
 
+import ethanp.system.Master
 import org.scalatest.WordSpec
 
 /**
@@ -8,9 +9,12 @@ import org.scalatest.WordSpec
  */
 class MasterSpec extends WordSpec {
   "Master" when {
-    "exists" should {
-      "have true" in {
-        assert(true)
+    "starts up" should {
+      "create and connect all nodes" in {
+        Master.startAllNodes(3, 3)
+        assert {
+          List(Master.clients, Master.servers) forall (_.size == 3)
+        }
       }
     }
   }

@@ -7,7 +7,7 @@ import ethanp.system.Common.PID
  * 3/24/15
  */
 
-sealed abstract class Msg
+sealed abstract class Msg extends Serializable
 case class Preempted(ballot: Ballot) extends Msg
 case object PrintLog extends Msg
 case object AllClear extends Msg

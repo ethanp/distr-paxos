@@ -2,9 +2,8 @@ package ethanp.system
 
 import java.util.Scanner
 
-import Common._
-import ethanp.node.{Node, Client}
-import ethanp.paxos._
+import ethanp.node.{Client, Node}
+import ethanp.system.Common._
 
 import scala.collection.{GenTraversable, mutable}
 
@@ -16,8 +15,8 @@ object Master {
      val clients = mutable.Map[PID, Client]()
      val servers = mutable.Map[PID, Server]()
 
-     val clientConns = mutable.Map[PID, MsgBuff]()
-     val serverConns = mutable.Map[PID, MsgBuff]()
+//     val clientConns = mutable.Map[PID, MsgBuff]()
+//     val serverConns = mutable.Map[PID, MsgBuff]()
 
      def getAllNodes = clients.values ++ servers.values
 
@@ -33,14 +32,14 @@ object Master {
              // creates TCP socket conn, which they accept and create their own MsgBuff out of
              // not sure I need this now though because as long as I'm going the multithreaded route
              // I have a direct voice to these guys
-             serverConns.put(i, new MsgBuff(server.listenPort))
+//             serverConns.put(i, new MsgBuff(server.listenPort))
          }
 
          for (i ← 1 to numClients) {
              val client: Client = new Client(i)
              clients.put(i, client)
              new Thread(client).start()
-             clientConns.put(i, new MsgBuff(client.listenPort))
+//             clientConns.put(i, new MsgBuff(client.listenPort))
          }
 
          /* connect the nodes to each other */
