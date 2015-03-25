@@ -47,8 +47,8 @@ abstract class Node(nodeIdx: Int) extends Runnable {
 
     def blockingInitAllConns(numClients: Int, numServers: Int)
 
-    def blockingConnectTo(num: Int, buffs: TrieMap[PID, MsgBuff], portFromPid: PID ⇒ Int) {
-        for (i ← 1 to num) {
+    def blockingConnectTo(pids: Iterable[PID], buffs: TrieMap[PID, MsgBuff], portFromPid: PID ⇒ Int) {
+        for (i ← pids) {
             if (!buffs.contains(i)) {
                 val buff = new MsgBuff(portFromPid(i))
                 buff.send(myConnObj)
@@ -57,11 +57,11 @@ abstract class Node(nodeIdx: Int) extends Runnable {
         }
     }
 
-    def blockingConnectToClients(numClients: Int) {
-        blockingConnectTo(numClients, clientBuffs, Common.clientPortFromPid)
+    def blockingConnectToClients(clientIds: Iterable[PID]) {
+        blockingConnectTo(clientIds, clientBuffs, Common.clientPortFromPid)
     }
-    def blockingConnectToServers(numServers: Int) {
-        blockingConnectTo(numServers, serverBuffs, Common.serverPortFromPid)
+    def blockingConnectToServers(serverIds: Iterable[PID]) {
+        blockingConnectTo(serverIds, serverBuffs, Common.serverPortFromPid)
     }
 
     def myConnObj: NodeConnection

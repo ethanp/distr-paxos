@@ -23,19 +23,21 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     override def myConnObj = ServerConnection(nodeID)
 
     override def blockingInitAllConns(numClients: Int, numServers: Int) {
-        blockingConnectToClients(numClients)
-        blockingConnectToServers(numServers)
+        blockingConnectToClients(1 to numClients)
+        blockingConnectToServers(1 to numClients filterNot (_ == nodeID))
     }
 
     override def handle(msg: Msg) {
         msg match {
-            case Preempted(ballot) => leader preempt ballot
-            case PrintLog => replica.printLog()
-            case AllClear => ???
-            case Crash => alive = false
-            case CrashAfter(numMsgs) => crashAfter = numMsgs
-            case p@Proposal(_,_) => replica propose p
-            case _ => throw new RuntimeException("unexpected msg: "+msg)
+            case Preempted(ballot) ⇒ leader preempt ballot
+
+            case p@SlotProposal() ⇒ leader propose p
+            case PrintLog ⇒ replica.printLog()
+            case AllClear ⇒ ???
+            case Crash ⇒ alive = false
+            case CrashAfter(numMsgs) ⇒ crashAfter = numMsgs
+            case p@ClientProposal() ⇒ replica propose p
+            case _ ⇒ throw new RuntimeException("unexpected msg: "+msg)
         }
     }
 }

@@ -13,7 +13,14 @@ case object PrintLog extends Msg
 case object AllClear extends Msg
 case object Crash extends Msg
 case class CrashAfter(numMsgs: Int) extends Msg
-case class Proposal(idx: Int, txt: String) extends Msg
+case class ClientProposal(senderID: PID, propID: Int, text: String) extends Msg
+case class SlotProposal(senderID: PID, propID: Int, idx: Int, text: String) extends Msg
+
+object SlotProposal {
+    def apply(idx: Int, p: ClientProposal) = SlotProposal(p.senderID, p.propID, idx, p.text)
+    type SlotProposal = SlotProposal
+}
+
 
 sealed abstract class NodeConnection(nodeId: Int) extends Msg
 case class ClientConnection(nodeId: PID) extends NodeConnection(nodeId)
