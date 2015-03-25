@@ -1,4 +1,4 @@
-package ethanp.paxos
+package ethanp.system
 
 /**
  * Ethan Petuchowski
@@ -10,4 +10,6 @@ case object PrintLog extends Msg
 case object AllClear extends Msg
 case object Crash extends Msg
 case class CrashAfter(numMsgs: Int) extends Msg
-case class NodeConnection(nodeId: Int) extends Msg
+sealed abstract class NodeConnection(nodeId: Int) extends Msg
+case class ClientConnection(nodeId: Int) extends NodeConnection(nodeId)
+case class ServerConnection(nodeId: Int) extends NodeConnection(nodeId)
