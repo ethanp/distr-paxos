@@ -11,20 +11,28 @@ object Master {
 
     val clients = mutable.Map[Int, Client]()
     val servers = mutable.Map[Int, Server]()
+
+    val clientConns = mutable.Map[Int, MsgBuff]()
+    val serverConns = mutable.Map[Int, MsgBuff]()
+
     val leaderID = 1
     val masterID = 0
 
     def startAllNodes(numServers: Int, numClients: Int) {
         (1 to numServers).foreach { i ⇒
-            val server: Server = new Server(i)
+            val server: Server = new Server(i) // blocks until ServerSocket connects
             servers.put(i, server)
             new Thread(server).start()
+
+            // creates TCP socket conn, which they accept and create their own MsgBuff out of
+            serverConns.put(i, new MsgBuff(server.listenPort))
         }
 
         (1 to numClients).foreach { i ⇒
             val client: Client = new Client(i)
             clients.put(i, client)
             new Thread(client).start()
+            clientConns.put(i, new MsgBuff(client.listenPort))
         }
     }
 
@@ -39,7 +47,9 @@ object Master {
     def broadcast(nodes: GenTraversable[Node], msg: Msg) = nodes.foreach(n ⇒ send(n, msg))
 
 
-    /* expects usage COMMAND < testFile.test */
+    /**
+     * TODO I think their script expects usage: `COMMAND < testFile.test`
+     */
     def main(args: Array[String]) {
         val scan: Scanner = new Scanner(System.in)
         while (scan.hasNextLine) {

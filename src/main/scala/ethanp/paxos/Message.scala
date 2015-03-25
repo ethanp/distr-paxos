@@ -10,3 +10,4 @@ case object PrintLog extends Msg
 case object AllClear extends Msg
 case object Crash extends Msg
 case class CrashAfter(numMsgs: Int) extends Msg
+case class NodeConnection(nodeId: Int) extends Msg

@@ -11,7 +11,7 @@ import scala.collection.mutable
 abstract class Node(nodeIdx: Int) extends Runnable {
 
     var alive = false
-    val listenPort = 3000 + nodeIdx
+    val listenPort = nodeIdx + offset
     val serverSocket = new ServerSocket(listenPort)
     val msgBuffs = mutable.Queue[MsgBuff]()
     start()
@@ -23,7 +23,6 @@ abstract class Node(nodeIdx: Int) extends Runnable {
             val socket = serverSocket.accept()
             val msgBuff = MsgBuff(socket)
             msgBuffs.enqueue(msgBuff)
-            new Thread(msgBuff).start()
         }
     }
 
@@ -31,26 +30,28 @@ abstract class Node(nodeIdx: Int) extends Runnable {
         alive = false
     }
 
+    def offset: Int
+
     def restart() {
         kill()
         start()
     }
 
     override def run() {
-        while (true) {
+        while (alive) {
             Thread.sleep(300)
-            getMsg() match {
+            getMsg match {
                 case Some(x) ⇒ handle(x)
                 case None ⇒ _ // Do nothing
             }
         }
     }
 
-    /** gets all waiting msgs over all `msgBuffs` */
-    def getMsg(): Option[Msg] = {
+    /** get first waiting msg over all `msgBuffs` */
+    def getMsg: Option[Msg] = {
         for (msgBuff ← msgBuffs) {
             msgBuff.get() match {
-                case Some(x) ⇒ return Some(x)
+                case y: Some ⇒ return y
                 case None ⇒ _ // I'm hoping this means "do nothing"
             }
         }
@@ -58,43 +59,15 @@ abstract class Node(nodeIdx: Int) extends Runnable {
     }
 
     def init()
-    def handle(msg: Msg)
-}
 
-
-
-class Client(nodeIdx: Int) extends Node(nodeIdx) {
-
-    override def restart(): Unit = ???
-
-    override def handle(msg: Msg) {
+    def handle(msg: Msg) {
         msg match {
-            case Preempted ⇒
-            case PrintLog ⇒
-            case AllClear ⇒
-            case Crash ⇒
-            case CrashAfter(numMsgs) ⇒
+            case Preempted =>
+            case PrintLog =>
+            case AllClear =>
+            case Crash =>
+            case CrashAfter(numMsgs) =>
+            case NodeConnection(nodeId) =>
         }
     }
-
-    override def init(): Unit = ???
-}
-
-class Server(nodeIdx: Int) extends Node(nodeIdx) {
-
-    override def restart(): Unit = ???
-
-    override def run(): Unit = ???
-
-    override def handle(msg: Msg) {
-        msg match {
-            case Preempted ⇒
-            case PrintLog ⇒
-            case AllClear ⇒
-            case Crash ⇒
-            case CrashAfter(numMsgs) ⇒
-        }
-    }
-
-    override def init(): Unit = ???
 }
