@@ -66,6 +66,8 @@ abstract class Node(nodeIdx: Int) extends Runnable {
         blockingConnectTo(serverIds, serverBuffs, Common.serverPortFromPid)
     }
 
+    def sendServer(id: PID, msg: Msg) = serverBuffs(id) send msg
+
     def myConnObj: NodeConnection
 
     def kill() {
@@ -105,4 +107,5 @@ abstract class Node(nodeIdx: Int) extends Runnable {
     def handle(msg: Msg): Unit
 
     def broadcast(buffs: Iterable[MsgBuff], msg: Msg) = buffs foreach (_ send msg)
+    def broadcastServers(msg: Msg) = broadcast(serverBuffs.values, msg)
 }

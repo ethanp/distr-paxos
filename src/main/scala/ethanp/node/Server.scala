@@ -1,6 +1,7 @@
 package ethanp.node
 
 import ethanp.paxos.{Acceptor, Leader, Replica}
+import ethanp.system.Common._
 import ethanp.system._
 
 /**
@@ -14,6 +15,9 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     val acceptor = new Acceptor(this)
 
     override def restart(): Unit = ???
+
+    def sendClient(id: PID, msg: Msg) = clientBuffs(id) send msg
+    def broadcastClients(msg: Msg) = broadcast(clientBuffs.values, msg)
 
     override def init(): Unit = ???
 
@@ -33,6 +37,7 @@ class Server(val nodeID: Int) extends Node(nodeID) {
             case p@ClientProposal(_,_,_) ⇒ replica propose p
             case p@SlotProposal(_,_,_,_) ⇒ leader propose p
             case Preempted(ballot) ⇒ leader preempt ballot
+            case Heartbeat(serverID) ⇒ leader receiveHeartbeatFrom serverID
             case _ ⇒ throw new RuntimeException("unexpected msg: "+msg)
         }
     }
