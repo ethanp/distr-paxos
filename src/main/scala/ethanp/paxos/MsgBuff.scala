@@ -44,6 +44,9 @@ class MsgBuff(val socket: Socket) extends Runnable {
         while (alive) {
             val rcvdMsg = ois.readObject().asInstanceOf[Msg] // this is where we block
             inBuff.offer(rcvdMsg)
+            if (inBuff.size() > 5) {
+                println(s"just letting you know the buffer has ${inBuff.size()} msgs")
+            }
         }
     }
 

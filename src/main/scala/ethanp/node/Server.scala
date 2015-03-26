@@ -1,7 +1,7 @@
-package ethanp.system
+package ethanp.node
 
-import ethanp.node.Node
-import ethanp.paxos.{Leader, Replica}
+import ethanp.paxos.{Acceptor, Leader, Replica}
+import ethanp.system._
 
 /**
  * Ethan Petuchowski
@@ -11,6 +11,7 @@ class Server(val nodeID: Int) extends Node(nodeID) {
 
     val replica = new Replica(this)
     val leader = new Leader(this)
+    val acceptor = new Acceptor(this)
 
     override def restart(): Unit = ???
 
@@ -28,12 +29,10 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     override def handle(msg: Msg) {
         msg match {
             case Crash ⇒ alive = false
-            case LeaderTimeBomb(numMsgs) ⇒
-                if (leader active) leader setTimeBomb numMsgs
+            case LeaderTimeBomb(numMsgs) ⇒ if (leader active) leader setTimeBomb numMsgs
             case p@ClientProposal(_,_,_) ⇒ replica propose p
             case p@SlotProposal(_,_,_,_) ⇒ leader propose p
             case Preempted(ballot) ⇒ leader preempt ballot
-            case AllClear ⇒ ???
             case _ ⇒ throw new RuntimeException("unexpected msg: "+msg)
         }
     }

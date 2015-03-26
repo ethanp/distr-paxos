@@ -2,10 +2,10 @@ package ethanp.system
 
 import java.util.Scanner
 
-import ethanp.node.{Client, Node}
+import ethanp.node.{Server, Client, Node}
 import ethanp.system.Common._
 
-import scala.collection.{GenTraversable, mutable}
+import scala.collection.mutable
 
 /**
  * Ethan Petuchowski 3/24/15
@@ -40,8 +40,6 @@ object Master {
 
     def send(node: Node, msg: Msg): Unit = ???
 
-    def broadcast(nodes: GenTraversable[Node], msg: Msg) = nodes.foreach(n ⇒ send(n, msg))
-
     def handle(input: String): Unit = handle(input split " ")
 
     def handle(inputWords: Array[String]) {
@@ -72,14 +70,24 @@ object Master {
                 val clientIndex = inputWords(1).toInt
                 send(clients(clientIndex), PrintLog)
 
-            /* TODO
+            /*
              * Ensure that this BLOCKS until all messages that are going to
              * come to consensus in paxos do, and that all clients have heard
-             * of them
+             * of them (is this cheating?)
              */
             case "allClear" ⇒
-                broadcast(getAllNodes, AllClear)
-                ???
+                var clear = false
+                var i = 1
+                while (i < 100 && !clear) {
+                    /* continue iff any proposals have been proposed but not decided */
+                    val totalProposals = clients.values.map(_.proposals.values.size).sum
+                    clear = clients.values.forall(c ⇒ c.chatLog.size == totalProposals)
+                    if (!clear) Thread.sleep(20)
+                    i+=1
+                }
+                if (!clear)
+                    throw new RuntimeException("waited 2 sec, but still not 'all clear'!")
+
 
             /* Immediately crash the server specified by nodeIndex */
             case "crashServer" ⇒

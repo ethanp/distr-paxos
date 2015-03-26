@@ -1,6 +1,7 @@
 package ethanp.paxos
 
-import ethanp.system.{SlotProposal, ClientProposal, Server}
+import ethanp.node.Server
+import ethanp.system.{SlotProposal, ClientProposal}
 
 import scala.collection.mutable
 import scala.language.postfixOps
