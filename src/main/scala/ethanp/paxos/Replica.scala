@@ -23,6 +23,4 @@ class Replica(server: Server) {
             server.serverBuffs.values.foreach(_.send(SlotProposal(firstIdx, proposal)))
         }
     }
-
-    def printLog(): Unit = ???
 }

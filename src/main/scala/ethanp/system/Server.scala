@@ -12,8 +12,6 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     val replica = new Replica(this)
     val leader = new Leader(this)
 
-    var crashAfter = -1
-
     override def restart(): Unit = ???
 
     override def init(): Unit = ???
@@ -23,20 +21,19 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     override def myConnObj = ServerConnection(nodeID)
 
     override def blockingInitAllConns(numClients: Int, numServers: Int) {
-        blockingConnectToClients(1 to numClients)
-        blockingConnectToServers(1 to numClients filterNot (_ == nodeID))
+        blockingConnectToClients(0 until numClients)
+        blockingConnectToServers(0 until numClients filterNot (_ == nodeID))
     }
 
     override def handle(msg: Msg) {
         msg match {
-            case Preempted(ballot) ⇒ leader preempt ballot
-
-            case p@SlotProposal() ⇒ leader propose p
-            case PrintLog ⇒ replica.printLog()
-            case AllClear ⇒ ???
             case Crash ⇒ alive = false
-            case CrashAfter(numMsgs) ⇒ crashAfter = numMsgs
-            case p@ClientProposal() ⇒ replica propose p
+            case LeaderTimeBomb(numMsgs) ⇒
+                if (leader active) leader setTimeBomb numMsgs
+            case p@ClientProposal(_,_,_) ⇒ replica propose p
+            case p@SlotProposal(_,_,_,_) ⇒ leader propose p
+            case Preempted(ballot) ⇒ leader preempt ballot
+            case AllClear ⇒ ???
             case _ ⇒ throw new RuntimeException("unexpected msg: "+msg)
         }
     }

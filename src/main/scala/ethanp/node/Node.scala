@@ -29,6 +29,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
             while (alive) {
                 val socket = serverSocket.accept()
                 val msgBuff = new MsgBuff(socket)
+                new Thread(msgBuff).start()
                 val nc = msgBuff.blockTillMsgRcvd().asInstanceOf[NodeConnection]
                 nc match {
                     case ClientConnection(nodeId) => clientBuffs.put(nodeId, msgBuff)
@@ -51,6 +52,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
         for (i ← pids) {
             if (!buffs.contains(i)) {
                 val buff = new MsgBuff(portFromPid(i))
+                new Thread(buff).start()
                 buff.send(myConnObj)
                 buffs.put(i, buff)
             }
@@ -79,7 +81,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
 
     override def run() {
         while (alive) {
-            Thread.sleep(300)
+            Thread.sleep(10)
             getMsg match {
                 case Some(x) ⇒ handle(x)
                 case None ⇒ // Do nothing

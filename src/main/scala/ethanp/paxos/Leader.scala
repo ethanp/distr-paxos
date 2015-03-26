@@ -9,10 +9,19 @@ import scala.collection.mutable
  * 3/25/15
  */
 class Leader(server: Server) {
+
+    /**
+     * The CURRENT leader shall crash itself after sending
+     *    "numMsgs" server side Paxos-related messages.
+     *
+     * This excludes heartbeat messages if you use them.
+     */
+    @volatile var timeBomb = 0
+    def setTimeBomb(numMsgs: Int) { timeBomb = numMsgs }
+
     def propose(proposal: SlotProposal) {
         if (proposals.add(proposal) && active) {
-            /* TODO spawn a commander to try to replicate the proposal*/
-            ???
+            new Thread(new Commander(this)).start()
         }
     }
 

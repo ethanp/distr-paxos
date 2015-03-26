@@ -10,7 +10,7 @@ import org.scalatest.WordSpec
 class MasterSpec extends WordSpec {
   "The Master" when {
     "receiving start 3 3" should {
-      Master.handle("start 3 3" split " ")
+      Master.handle("start 3 3")
       "create all nodes" in {
         assert {
           List(Master.clients, Master.servers) forall (_.size == 3)

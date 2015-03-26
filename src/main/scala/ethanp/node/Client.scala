@@ -15,7 +15,6 @@ class Client(nodeIdx: Int) extends Node(nodeIdx) {
     case class ChatLogItem(senderID: Int, text: String)
     val chatLog = mutable.Map[Int, ChatLogItem]()
 
-    case class StoredProposal(text: String, var responded: Boolean = false)
     val proposals = mutable.Map[Int, StoredProposal]()
 
     override def restart(): Unit = ???
@@ -25,7 +24,7 @@ class Client(nodeIdx: Int) extends Node(nodeIdx) {
     override def offset = Common.clientOffset
 
     override def blockingInitAllConns(numClients: Int, numServers: Int) {
-        blockingConnectToServers(1 to numClients)
+        blockingConnectToServers(0 until numClients)
     }
 
     override def myConnObj = ClientConnection(nodeIdx)
@@ -52,6 +51,9 @@ class Client(nodeIdx: Int) extends Node(nodeIdx) {
                     proposals.get(propID).get.responded = true
                 }
                 chatLog.put(idx, ChatLogItem(senderID, text))
+            case _ ⇒ throw new RuntimeException("Unhandled msg: "+msg)
         }
     }
 }
+
+case class StoredProposal(text: String, var responded: Boolean = false)

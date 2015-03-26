@@ -12,13 +12,15 @@ case class Preempted(ballot: Ballot) extends Msg
 case object PrintLog extends Msg
 case object AllClear extends Msg
 case object Crash extends Msg
-case class CrashAfter(numMsgs: Int) extends Msg
-case class ClientProposal(senderID: PID, propID: Int, text: String) extends Msg
-case class SlotProposal(senderID: PID, propID: Int, idx: Int, text: String) extends Msg
+case class LeaderTimeBomb(numMsgs: Int) extends Msg
+
+case class ClientProposal(kID: PID, propID: Int, text: String) extends Msg
+case class SlotProposal(kID: PID, propID: Int, idx: Int, text: String) extends Msg
+case class PValue(ballot: Ballot, slotProposal: SlotProposal) extends Msg
 
 object SlotProposal {
-    def apply(idx: Int, p: ClientProposal) = SlotProposal(p.senderID, p.propID, idx, p.text)
-    type SlotProposal = SlotProposal
+    def apply(idx: Int, p: ClientProposal): SlotProposal =
+        SlotProposal(p.kID, p.propID, idx, p.text)
 }
 
 
@@ -27,7 +29,7 @@ case class ClientConnection(nodeId: PID) extends NodeConnection(nodeId)
 case class ServerConnection(nodeId: PID) extends NodeConnection(nodeId)
 
 case class Ballot(idx: Int, nodeID: PID) extends Ordered[Ballot] {
-    override def compare(that: Ballot): PID =
+    override def compare(that: Ballot): Int =
         if (idx != that.idx) idx - that.idx
         else nodeID - that.nodeID
 }

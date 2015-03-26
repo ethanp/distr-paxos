@@ -21,13 +21,13 @@ object Master {
 
         /* create nodes and start each of their servers */
 
-        for (i ← 1 to numServers) {
+        for (i ← 0 until numServers) {
             val server: Server = new Server(i) // blocks until ServerSocket connects
             servers.put(i, server)
             new Thread(server).start()
         }
 
-        for (i ← 1 to numClients) {
+        for (i ← 0 until numClients) {
             val client: Client = new Client(i)
             clients.put(i, client)
             new Thread(client).start()
@@ -42,6 +42,7 @@ object Master {
 
     def broadcast(nodes: GenTraversable[Node], msg: Msg) = nodes.foreach(n ⇒ send(n, msg))
 
+    def handle(input: String): Unit = handle(input split " ")
 
     def handle(inputWords: Array[String]) {
         inputWords(0) match {
@@ -96,7 +97,7 @@ object Master {
              */
             case "timeBombLeader" ⇒
                 val numMsgs: Int = inputWords(1).toInt
-                send(servers(leaderID), CrashAfter(numMsgs))
+                send(servers(leaderID), LeaderTimeBomb(numMsgs))
         }
     }
 

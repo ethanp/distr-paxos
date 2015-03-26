@@ -2,17 +2,25 @@ package ethanp.paxos
 
 import java.io.{ObjectInputStream, ObjectOutputStream}
 import java.net.Socket
+import java.util.concurrent.ConcurrentLinkedQueue
 
 import ethanp.system.Msg
 
 /**
  * Ethan Petuchowski
  * 3/24/15
+ *
+ * It took way too long to figure out how to accomplish this
  */
-class MsgBuff(socket: Socket) {
+class MsgBuff(val socket: Socket) extends Runnable {
+
+    @volatile var alive = true
+
     def this(port: Int) {
         this(new Socket("0.0.0.0", port))
     }
+
+    val inBuff = new ConcurrentLinkedQueue[Msg]()
 
     val oos = new ObjectOutputStream(socket.getOutputStream)
     val ois = new ObjectInputStream(socket.getInputStream)
@@ -22,18 +30,30 @@ class MsgBuff(socket: Socket) {
         oos.flush()
     }
 
-    def blockTillMsgRcvd(): Msg = ois.readObject().asInstanceOf[Msg]
+    def blockTillMsgRcvd(): Msg = {
+        for (i ← 1 to 100) {
+            val msg = readMsgIfAvailable()
+            if (msg.isDefined)
+                return msg.get
+            Thread.sleep(20)
+        }
+        throw new RuntimeException("Msg never received (waited 2 seconds)")
+    }
+
+    def run() {
+        while (alive) {
+            val rcvdMsg = ois.readObject().asInstanceOf[Msg] // this is where we block
+            inBuff.offer(rcvdMsg)
+        }
+    }
+
+    def kill() {
+        alive = false
+        socket.close()
+    }
 
     def readMsgIfAvailable(): Option[Msg] = {
-
-        /* don't wait if there's nothing to wait for*/
-        if (ois.available() == 0) return None
-
-        /* if we've received at least part of an object,
-           wait for the whole thing to arrive */
-        val obj = ois.readObject()
-
-        if (obj == null) None
-        else Some(obj.asInstanceOf[Msg])
+        if (inBuff.isEmpty) None
+        else Some(inBuff.poll())
     }
 }
