@@ -8,7 +8,7 @@ import scala.collection.mutable
  * Ethan Petuchowski
  * 3/24/15
  */
-class Client(nodeIdx: Int) extends Node(nodeIdx) {
+class Client(nodeID: Int) extends Node(nodeID) {
 
     @volatile var curPropID = 0
 
@@ -27,7 +27,7 @@ class Client(nodeIdx: Int) extends Node(nodeIdx) {
         blockingConnectToServers(0 until numClients)
     }
 
-    override def myConnObj = ClientConnection(nodeIdx)
+    override def myConnObj = ClientConnection(nodeID)
 
     /**
      * "The stub routine sends the command to ALL replicas
@@ -37,17 +37,18 @@ class Client(nodeIdx: Int) extends Node(nodeIdx) {
     def propose(txt: String) {
         curPropID += 1
         proposals.put(curPropID, StoredProposal(txt))
-        broadcast(serverBuffs.values, ClientProposal(nodeIdx, curPropID, txt))
+        broadcast(serverBuffs.values, ClientProposal(nodeID, curPropID, txt))
     }
 
-    override def handle(msg: Msg) {
+    override def handle(msg: Msg, senderPort: Int) {
+        println(s"client $nodeID rcvd $msg from $senderPort")
         msg match {
             case PrintLog => chatLog foreach {
                 case (k, v) ⇒ println(s"$k ${v.senderID} ${v.text}")
             }
             case AllClear => ???
             case SlotProposal(senderID, propID, idx, text) ⇒
-                if (senderID == nodeIdx) {
+                if (senderID == nodeID) {
                     proposals.get(propID).get.responded = true
                 }
                 chatLog.put(idx, ChatLogItem(senderID, text))

@@ -1,9 +1,10 @@
 package ethanp.paxos
 
+import ethanp.system.PValue
+
 /**
  * Ethan Petuchowski
  * 3/25/15
  */
-class Commander(leader: Leader) extends Runnable {
-    override def run(): Unit = ???
+class Commander(val pValue: PValue, leader: Leader) {
 }

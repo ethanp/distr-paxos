@@ -32,8 +32,12 @@ abstract class Node(nodeIdx: Int) extends Runnable {
                 new Thread(msgBuff).start()
                 val nc = msgBuff.blockTillMsgRcvd().asInstanceOf[NodeConnection]
                 nc match {
-                    case ClientConnection(nodeId) => clientBuffs.put(nodeId, msgBuff)
-                    case ServerConnection(nodeId) => serverBuffs.put(nodeId, msgBuff)
+                    case ClientConnection(nodeId) =>
+                        clientBuffs.put(nodeId, msgBuff)
+                        msgBuff.senderPort = Common.clientPortFromPid(nodeId)
+                    case ServerConnection(nodeId) =>
+                        serverBuffs.put(nodeId, msgBuff)
+                        msgBuff.senderPort = Common.serverPortFromPid(nodeId)
                 }
             }
         }
@@ -85,17 +89,17 @@ abstract class Node(nodeIdx: Int) extends Runnable {
         while (alive) {
             Thread.sleep(10)
             getMsg match {
-                case Some(x) ⇒ handle(x)
+                case Some((x,y)) ⇒ handle(x, y)
                 case None ⇒ // Do nothing
             }
         }
     }
 
     /** get first waiting msg over all `msgBuffs` */
-    def getMsg: Option[Msg] = {
+    def getMsg: Option[(Msg, Int)] = {
         for (msgBuff ← clientBuffs.values ++ serverBuffs.values) {
             msgBuff.readMsgIfAvailable() match {
-                case y@Some(_) ⇒ return y
+                case Some(y) ⇒ return Some(y, msgBuff.senderPort)
                 case None ⇒ ; // I'm hoping this means "do nothing"
             }
         }
@@ -104,7 +108,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
 
     def init()
 
-    def handle(msg: Msg): Unit
+    def handle(msg: Msg, senderPort: PID): Unit
 
     def broadcast(buffs: Iterable[MsgBuff], msg: Msg) = buffs foreach (_ send msg)
     def broadcastServers(msg: Msg) = broadcast(serverBuffs.values, msg)

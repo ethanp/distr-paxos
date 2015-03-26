@@ -15,9 +15,11 @@ import ethanp.system.Msg
 class MsgBuff(val socket: Socket) extends Runnable {
 
     @volatile var alive = true
+    var senderPort = -1
 
     def this(port: Int) {
         this(new Socket("0.0.0.0", port))
+        senderPort = port
     }
 
     val inBuff = new ConcurrentLinkedQueue[Msg]()

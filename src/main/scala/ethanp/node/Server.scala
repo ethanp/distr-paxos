@@ -30,16 +30,19 @@ class Server(val nodeID: Int) extends Node(nodeID) {
         blockingConnectToServers(0 until numClients filterNot (_ == nodeID))
     }
 
-    override def handle(msg: Msg) {
+    override def handle(msg: Msg, senderPort: PID) {
+        println(s"server $nodeID rcvd $msg from $senderPort")
         msg match {
-            case Crash ⇒ alive = false
             case LeaderTimeBomb(numMsgs) ⇒ if (leader active) leader setTimebombAfter numMsgs
             case proposal@ClientProposal(_,_,_) ⇒ replica propose proposal
             case proposal@SlotProposal(_,_,_,_) ⇒ leader propose proposal
-            case Preempted(ballot) ⇒ leader preempt ballot
-            case Heartbeat(serverID) ⇒ leader receiveHeartbeatFrom serverID
-            case voteReq@VoteRequest(_,_) ⇒ acceptor receiveVoteRequest voteReq
-            case voteResp@VoteResponse(_,_,_) ⇒ leader receiveVoteResponse voteResp
+            case Heartbeat(serverID)            ⇒ leader receiveHeartbeatFrom serverID
+            case voteReq@VoteRequest(_,_)       ⇒ acceptor receiveVoteRequest voteReq
+            case voteResp@VoteResponse(_,_,_)   ⇒ leader receiveVoteResponse voteResp
+
+            /* unimplemented */
+            case Crash ⇒ ???
+
             case _ ⇒ throw new RuntimeException("unexpected msg: "+msg)
         }
     }

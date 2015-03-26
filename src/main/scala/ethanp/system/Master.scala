@@ -34,8 +34,11 @@ object Master {
         }
 
         /* connect the nodes to each other */
-
         getAllNodes foreach (_ blockingInitAllConns(numClients, numServers))
+
+        /* the servers run for leadership */
+        servers.values.foreach(_.leader.asyncRandomDelayThenSpawnScout())
+        Thread sleep 1000
     }
 
     def send(node: Node, msg: Msg): Unit = ???
@@ -116,6 +119,9 @@ object Master {
      *
      * Come to think of it, their script would have been way simpler in plain Bash.
      * Oh, well maybe that wouldn't be Windows compatible enough or something.
+     *
+     * Note: all their tests start with "start a b", maybe I can leverage that
+     *       to simplify things.
      */
     def main(args: Array[String]) {
         val scan: Scanner = new Scanner(System.in)

@@ -7,6 +7,7 @@ import ethanp.system.Common.PID
 import ethanp.system._
 
 import scala.collection.mutable
+import scala.util.Random
 
 /**
  * Ethan Petuchowski
@@ -36,10 +37,20 @@ class Leader(val server: Server) {
     var leaderID: Int = LEADER_UNKNOWN
 
     var currentScout: Scout = null
+    val ongoingCommanders = mutable.Map.empty[PValue, Commander]
+
+    def asyncRandomDelayThenSpawnScout() {
+        /*ooh shiny!*/
+        new Thread {
+            Thread.sleep(Random.nextInt(10) * 100)
+            spawnScout()
+        }
+    }
 
     def propose(proposal: SlotProposal) {
         if (proposals.add(proposal) && active) {
-            new Thread(new Commander(this)).start()
+            val pValue = PValue(ballotNum, proposal)
+            ongoingCommanders += (pValue → new Commander(pValue, this))
         }
     }
 
@@ -75,7 +86,17 @@ class Leader(val server: Server) {
         else if (currentScout receiveVoteResponse response) gotElected()
     }
 
+    /* TODO this should be implicit method on mutable.Set[SlotProposal] called "⊕" */
+    def bigPlus(proposals: mutable.Set[SlotProposal], values: Set[PValue]) {
+        ???
+    }
+
+    /**
+     * in PMMC this would be reception of the "adopted" message
+     */
     def gotElected() {
+        println(s"$myID got elected")
+        bigPlus(proposals, currentScout.pvalues.toSet)
         active = true // this will cancel any outstanding HeartbeatExpector
         leaderID = myID
     }
@@ -99,3 +120,4 @@ class Leader(val server: Server) {
         }
     }
 }
+
