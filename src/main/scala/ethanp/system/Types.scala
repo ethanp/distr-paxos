@@ -46,3 +46,8 @@ object SlotProposal {
     def apply(idx: Int, p: ClientProposal): SlotProposal =
         SlotProposal(p.kID, p.propID, idx, p.text)
 }
+
+object Ballot {
+    def turnstyle(nodeID: PID) = Ballot(-1, nodeID)
+    def firstFor(nodeID: PID)  = Ballot( 0, nodeID)
+}

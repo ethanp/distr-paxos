@@ -1,7 +1,7 @@
 package ethanp.paxos
 
 import ethanp.node.Server
-import ethanp.system.{SlotProposal, ClientProposal}
+import ethanp.system._
 
 import scala.collection.mutable
 import scala.language.postfixOps
@@ -11,7 +11,6 @@ import scala.language.postfixOps
  * 3/25/15
  */
 class Replica(server: Server) {
-
 
     val proposals = mutable.Map.empty[Int, ClientProposal]
     val decisions = mutable.Map.empty[Int, ClientProposal]

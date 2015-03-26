@@ -33,11 +33,13 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     override def handle(msg: Msg) {
         msg match {
             case Crash ⇒ alive = false
-            case LeaderTimeBomb(numMsgs) ⇒ if (leader active) leader setTimeBomb numMsgs
-            case p@ClientProposal(_,_,_) ⇒ replica propose p
-            case p@SlotProposal(_,_,_,_) ⇒ leader propose p
+            case LeaderTimeBomb(numMsgs) ⇒ if (leader active) leader setTimebombAfter numMsgs
+            case proposal@ClientProposal(_,_,_) ⇒ replica propose proposal
+            case proposal@SlotProposal(_,_,_,_) ⇒ leader propose proposal
             case Preempted(ballot) ⇒ leader preempt ballot
             case Heartbeat(serverID) ⇒ leader receiveHeartbeatFrom serverID
+            case voteReq@VoteRequest(_,_) ⇒ acceptor receiveVoteRequest voteReq
+            case voteResp@VoteResponse(_,_,_) ⇒ leader receiveVoteResponse voteResp
             case _ ⇒ throw new RuntimeException("unexpected msg: "+msg)
         }
     }
