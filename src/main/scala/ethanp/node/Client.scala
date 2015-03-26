@@ -19,6 +19,8 @@ class Client(nodeID: Int) extends Node(nodeID) {
 
     override def restart(): Unit = ???
 
+    def printLog() = chatLog foreach { case (k, v) ⇒ println(s"$k ${v.senderID} ${v.text}") }
+
     override def init() {}
 
     override def offset = Common.clientOffset
@@ -43,15 +45,16 @@ class Client(nodeID: Int) extends Node(nodeID) {
     override def handle(msg: Msg, senderPort: Int) {
         println(s"client $nodeID rcvd $msg from $senderPort")
         msg match {
-            case PrintLog => chatLog foreach {
-                case (k, v) ⇒ println(s"$k ${v.senderID} ${v.text}")
-            }
-            case AllClear => ???
-            case SlotProposal(senderID, propID, idx, text) ⇒
-                if (senderID == nodeID) {
-                    proposals.get(propID).get.responded = true
+            case PrintLog => printLog()
+            case SlotProp(idx, clientProp) ⇒
+                if (clientProp.kID == nodeID) {
+                    proposals.get(clientProp.propID).get.responded = true
                 }
-                chatLog.put(idx, ChatLogItem(senderID, text))
+                chatLog.put(idx, ChatLogItem(clientProp.kID, clientProp.text))
+
+            /* UNIMPLEMENTED */
+            case AllClear => ???
+
             case _ ⇒ throw new RuntimeException("Unhandled msg: "+msg)
         }
     }

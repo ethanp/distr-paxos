@@ -23,7 +23,7 @@ class Scout(var ballot: Ballot, leader: Leader) {
      * @return true iff this response made us elected
      */
     def receiveVoteResponse(response: VoteResponse): Boolean = {
-        needResponsesFrom remove response.acceptorID
+        needResponsesFrom remove response.nodeID
         pvalues ++= response.accepteds
         needResponsesFrom.size <= responseThreshold
     }

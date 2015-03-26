@@ -1,7 +1,7 @@
 package ethanp.paxos
 
 import ethanp.node.StoredProposal
-import ethanp.system.{SlotProposal, Master}
+import ethanp.system.{ClientProposal, SlotProp, Master}
 import org.scalatest.WordSpec
 
 /**
@@ -12,6 +12,9 @@ class ClientSpec_M1 extends WordSpec {
 
     Master.handle("start 3 2")
     Master.handle("sendMessage 0 helloWorld")
+    val assumedClientProp = ClientProposal(0, 1, "helloWorld")
+    val assumedSlotProp = SlotProp(1, assumedClientProp)
+    val servers = Master.servers.values
 
     "A Client" when {
         "sent message" should {
@@ -20,8 +23,7 @@ class ClientSpec_M1 extends WordSpec {
             }
             "send proposal to all servers" in {
                 Thread.sleep(300)
-                assert(Master.servers.values.forall
-                        (_.leader.proposals.contains(SlotProposal(0, 1, 1, "helloWorld"))))
+                assert(servers.forall(_.leader.proposals.contains(assumedSlotProp)))
             }
             "all clear" should {
 //                Master.handle("allClear")

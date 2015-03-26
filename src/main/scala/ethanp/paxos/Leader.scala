@@ -30,7 +30,7 @@ class Leader(val server: Server) {
     /* Fields **/
     var ballotNum = Ballot firstFor myID
     @volatile var active = false
-    val proposals = mutable.Set.empty[SlotProposal]
+    val proposals = mutable.Set.empty[SlotProp]
 
     var lastHeartbeat = LocalTime.now
     var heartbeatExpectorThread: Thread = null
@@ -43,11 +43,11 @@ class Leader(val server: Server) {
         /*ooh shiny!*/
         new Thread {
             Thread.sleep(Random.nextInt(10) * 100)
-            spawnScout()
+            if (leaderID == LEADER_UNKNOWN) spawnScout()
         }
     }
 
-    def propose(proposal: SlotProposal) {
+    def propose(proposal: SlotProp) {
         if (proposals.add(proposal) && active) {
             val pValue = PValue(ballotNum, proposal)
             ongoingCommanders += (pValue → new Commander(pValue, this))
@@ -86,9 +86,9 @@ class Leader(val server: Server) {
         else if (currentScout receiveVoteResponse response) gotElected()
     }
 
-    /* TODO this should be implicit method on mutable.Set[SlotProposal] called "⊕" */
-    def bigPlus(proposals: mutable.Set[SlotProposal], values: Set[PValue]) {
-        ???
+    /* TODO this should be implicit method on mutable.Set[SlotProp] called "⊕" */
+    def bigPlus(proposals: mutable.Set[SlotProp], values: Set[PValue]) {
+        proposals ++= values.groupBy(_.slotProp).map(_._2.maxBy(_.ballot).slotProp).toSet
     }
 
     /**

@@ -20,7 +20,7 @@ class Replica(server: Server) {
             val usedIndices = proposals.keySet ++ decisions.keySet
             val firstIdx = (Stream from 1 dropWhile usedIndices.contains).head
             proposals.put(firstIdx, proposal)
-            server.serverBuffs.values.foreach(_.send(SlotProposal(firstIdx, proposal)))
+            server.serverBuffs.values.foreach(_.send(SlotProp(firstIdx, proposal)))
         }
     }
 }

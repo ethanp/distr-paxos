@@ -62,11 +62,11 @@ class MasterSpec extends WordSpec {
       }
       "have servers" which {
         "the leader has received the proposal" in {
-          getLeader.proposals.head.text == "helloWorld"
+          getLeader.proposals.head.clientProp.text == "helloWorld"
         }
         "the leader has a commander for the proposal" in {
           assert(getLeader.ongoingCommanders.size == 1)
-          assert(getLeader.ongoingCommanders.head._2.pValue.slotProposal.text == t)
+          assert(getLeader.ongoingCommanders.head._2.pValue.slotProp.clientProp.text == t)
         }
         "the replicas have received the (correct) pValue" in {
           servers.forall(_.replica.proposals(0).text == t)

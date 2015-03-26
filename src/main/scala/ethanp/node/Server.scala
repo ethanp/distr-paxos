@@ -35,7 +35,7 @@ class Server(val nodeID: Int) extends Node(nodeID) {
         msg match {
             case LeaderTimeBomb(numMsgs) ⇒ if (leader active) leader setTimebombAfter numMsgs
             case proposal@ClientProposal(_,_,_) ⇒ replica propose proposal
-            case proposal@SlotProposal(_,_,_,_) ⇒ leader propose proposal
+            case proposal@SlotProp(_,_,_,_) ⇒ leader propose proposal
             case Heartbeat(serverID)            ⇒ leader receiveHeartbeatFrom serverID
             case voteReq@VoteRequest(_,_)       ⇒ acceptor receiveVoteRequest voteReq
             case voteResp@VoteResponse(_,_,_)   ⇒ leader receiveVoteResponse voteResp
