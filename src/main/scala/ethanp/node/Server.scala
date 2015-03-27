@@ -46,6 +46,8 @@ class Server(val nodeID: Int) extends Node(nodeID) {
             case pProp@PValProp(_,_)            ⇒ acceptor receivePValProp pProp
             case pResp@PValResponse(_,_)        ⇒ leader receivePValResp pResp
 
+            case decision@Decision(_)           ⇒ replica receiveDecision decision
+
             /* unimplemented */
             case LeaderTimeBomb(numMsgs) ⇒ if (leader active) leader setTimebombAfter numMsgs
             case Crash ⇒ ???

@@ -29,11 +29,14 @@ class Commander(val pValue: PValue, leader: Leader) {
                 val dec = Decision(pValue.slotProp)
                 leader.server.replica.receiveDecision(dec)
                 leader.server.broadcastServers(dec)
+                exit()
             }
         }
         else {
-            leader.ongoingCommanders remove pValue.slotProp
+            exit()
             leader preempt pValResponse.pValue.ballot
         }
     }
+
+    def exit() = leader.ongoingCommanders remove pValue.slotProp
 }
