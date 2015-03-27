@@ -31,13 +31,20 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     }
 
     override def handle(msg: Msg, senderPort: PID) {
-        println(s"server $nodeID rcvd $msg from $senderPort")
+        if (!msg.isInstanceOf[Heartbeat])
+            println(s"server $nodeID rcvd $msg from $senderPort")
         msg match {
             case proposal@ClientProp(_,_,_)     ⇒ replica propose proposal
             case proposal@SlotProp(_,_)         ⇒ leader propose proposal
             case Heartbeat(serverID)            ⇒ leader receiveHeartbeatFrom serverID
+
+            /* p1a, p1b */
             case voteReq@VoteRequest(_,_)       ⇒ acceptor receiveVoteRequest voteReq
             case voteResp@VoteResponse(_,_,_)   ⇒ leader receiveVoteResponse voteResp
+
+            /* p2a, p2b */
+            case pProp@PValProp(_,_)            ⇒ acceptor receivePValProp pProp
+            case pResp@PValResponse(_,_)        ⇒ leader receivePValResp pResp
 
             /* unimplemented */
             case LeaderTimeBomb(numMsgs) ⇒ if (leader active) leader setTimebombAfter numMsgs

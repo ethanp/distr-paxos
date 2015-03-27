@@ -15,24 +15,28 @@ case object AllClear extends Msg
 case object Crash extends Msg
 case class LeaderTimeBomb(numMsgs: Int) extends Msg
 
-/* PROPOSALS */
 case class ClientProp(kID: PID, propID: Int, text: String) extends Msg
 case class SlotProp(idx: Int, clientProp: ClientProp) extends Msg
 case class PValue(ballot: Ballot, slotProp: SlotProp) extends Msg
+
+/* PROPOSALS */
+case class PValProp(nodeID: PID, pValue: PValue) extends Msg     // sent for "p2a"
+case class PValResponse(nodeID: PID, pValue: PValue) extends Msg // sent for "p2b
+
+case class Decision(slotProp: SlotProp) extends Msg
 
 /* WIRING NODES TOGETHER */
 sealed abstract class NodeConnection(nodeId: Int) extends Msg
 case class ClientConnection(nodeId: PID) extends NodeConnection(nodeId)
 case class ServerConnection(nodeId: PID) extends NodeConnection(nodeId)
 
-/* OTHER PAXOS MESSAGES */
+/* FOR ELECTIONS */
 case class Preempted(ballot: Ballot) extends Msg
 case class VoteRequest(nodeID: PID, ballot: Ballot) extends Msg
 case class VoteResponse(nodeID: PID, ballot: Ballot, accepteds: Set[PValue]) extends Msg
 
 /* OPTIMIZATION MESSAGES */
 case class Heartbeat(nodeID: PID) extends Msg
-case class HeartbeatReq(serverID: PID) extends Msg
 
 /* PAXOS OBJECTS */
 case class Ballot(idx: Int, nodeID: PID) extends Ordered[Ballot] {

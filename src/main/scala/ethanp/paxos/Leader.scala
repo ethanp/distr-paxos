@@ -37,10 +37,9 @@ class Leader(val server: Server) {
     var leaderID: Int = LEADER_UNKNOWN
 
     var currentScout: Scout = null
-    val ongoingCommanders = mutable.Map.empty[PValue, Commander]
+    val ongoingCommanders = mutable.Map.empty[SlotProp, Commander]
 
     def asyncRandomDelayThenSpawnScout() {
-        /*ooh shiny!*/
         new Thread {
             Thread.sleep(Random.nextInt(10) * 100)
             if (leaderID == LEADER_UNKNOWN) spawnScout()
@@ -50,7 +49,7 @@ class Leader(val server: Server) {
     def propose(proposal: SlotProp) {
         if (proposals.add(proposal) && active) {
             val pValue = PValue(ballotNum, proposal)
-            ongoingCommanders += (pValue → new Commander(pValue, this))
+            ongoingCommanders += (proposal → new Commander(pValue, this))
         }
     }
 
@@ -65,18 +64,26 @@ class Leader(val server: Server) {
             currentScout = null
             active = false
             ballotNum = Ballot(ballot.idx+1, myID)
-
-            /* register for heartbeats from ballot.nodeID */
             leaderID = ballot.nodeID
-//            server.sendServer(leaderID, HeartbeatReq(myID))
             lastHeartbeat = LocalTime.now
 
             /* start waiting for heartbeats */
             heartbeatThread = new Thread(new HeartbeatExpector)
             heartbeatThread.start()
         }
+        else {
+            println(s"$myID can't capitulate, ballot too low. Is this an ERROR?")
+        }
     }
 
+    /** TODO I need to verify that this makes sense since I do end up voting for myself too!
+      *
+      * I did it a little bit differently for the Commander,
+      * and I think that way makes more sense.
+      *
+      *     * E.g. including myself in the responses that I am initially waiting for
+      *         * And adjusting the number of responses that I need accordingly
+      */
     def receiveVoteResponse(response: VoteResponse) {
         if (currentScout == null) {
             println(s"$myID ignoring vote response")
@@ -85,6 +92,13 @@ class Leader(val server: Server) {
 
         if (response.ballot > currentScout.ballot) preempt(response.ballot)
         else if (currentScout.receiveVoteResponse(response) && leaderID != myID) gotElected()
+    }
+
+    def receivePValResp(response: PValResponse) {
+        ongoingCommanders.get(response.pValue.slotProp) match {
+            case Some(commander) => commander receivePValResponse response
+            case None => println(s"$myID ignoring response for non-existent commander")
+        }
     }
 
     /* TODO this should be implicit method on mutable.Set[SlotProp] called "⊕" */
@@ -107,6 +121,24 @@ class Leader(val server: Server) {
         heartbeatThread.start()
     }
 
+    /** TODO this surely makes no sense
+      *
+      * There's gotta be a bunch of cases in here!
+      *
+      * 1. For example what if someone times out on my heartbeats, gets elected, and starts
+      *    sending me heartbeats?
+      *
+      *      * Well surely, I should capitulate (and don't call me Shirley).
+      *
+      *
+      * 2. There's probably a bunch more cases like this too that I'll need to handle
+      *
+      *      * I guess I'll just get to that when I get to that; right now I'm implementing
+      *        PAXOS, not some heart-bleeding bull-crap.
+      *
+      *      * My guess is that I'll have to include a ballot number in the heartbeat.
+      *      * Worst comes to worst, I'll take a gander at the ol' Raft paper.
+      */
     def receiveHeartbeatFrom(pid: PID) {
         if (!active && (leaderID != LEADER_UNKNOWN)) {
             lastHeartbeat = LocalTime.now

@@ -23,4 +23,9 @@ class Replica(server: Server) {
             server.serverBuffs.values.foreach(_.send(SlotProp(firstIdx, proposal)))
         }
     }
+
+    def receiveDecision(decision: Decision) {
+        decisions.put(decision.slotProp.idx, decision.slotProp.clientProp)
+        /* TODO not finished */
+    }
 }

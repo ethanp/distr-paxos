@@ -4,7 +4,7 @@ import java.io.{ObjectInputStream, ObjectOutputStream}
 import java.net.Socket
 import java.util.concurrent.ConcurrentLinkedQueue
 
-import ethanp.system.Msg
+import ethanp.system.{Heartbeat, Msg}
 
 /**
  * Ethan Petuchowski
@@ -28,7 +28,8 @@ class MsgBuff(val socket: Socket, val localLPort: Int) extends Runnable {
     val ois = new ObjectInputStream(socket.getInputStream)
 
     def send(msg: Msg) {
-        println(s"$localLPort sending $msg to $remoteLPort")
+        if (!msg.isInstanceOf[Heartbeat])
+            println(s"$localLPort sending $msg to $remoteLPort")
         oos.writeObject(msg)
         oos.flush()
     }
