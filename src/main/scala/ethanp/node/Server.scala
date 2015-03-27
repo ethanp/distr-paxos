@@ -14,12 +14,10 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     val leader = new Leader(this)
     val acceptor = new Acceptor(this)
 
-    override def restart(): Unit = ???
+    override def init(): Unit = ???
 
     def sendClient(id: PID, msg: Msg) = clientBuffs(id) send msg
     def broadcastClients(msg: Msg) = broadcast(clientBuffs.values, msg)
-
-    override def init(): Unit = ???
 
     override def offset = Common.serverOffset
 
@@ -37,6 +35,7 @@ class Server(val nodeID: Int) extends Node(nodeID) {
             case proposal@ClientProp(_,_,_)     ⇒ replica propose proposal
             case proposal@SlotProp(_,_)         ⇒ leader propose proposal
             case Heartbeat(serverID)            ⇒ leader receiveHeartbeatFrom serverID
+            case decision@Decision(_)           ⇒ replica receiveDecision decision
 
             /* p1a, p1b */
             case voteReq@VoteRequest(_,_)       ⇒ acceptor receiveVoteRequest voteReq
@@ -45,12 +44,6 @@ class Server(val nodeID: Int) extends Node(nodeID) {
             /* p2a, p2b */
             case pProp@PValProp(_,_)            ⇒ acceptor receivePValProp pProp
             case pResp@PValResponse(_,_)        ⇒ leader receivePValResp pResp
-
-            case decision@Decision(_)           ⇒ replica receiveDecision decision
-
-            /* unimplemented */
-            case LeaderTimeBomb(numMsgs) ⇒ if (leader active) leader setTimebombAfter numMsgs
-            case Crash ⇒ ???
 
             case _ ⇒ throw new RuntimeException("unexpected msg: "+msg)
         }

@@ -1,7 +1,8 @@
 package ethanp.paxos
 
 import ethanp.system.Common.PID
-import ethanp.system.{PValue, Ballot, VoteResponse, VoteRequest}
+import ethanp.system.Master.numServers
+import ethanp.system._
 
 import scala.collection.mutable
 
@@ -11,7 +12,7 @@ import scala.collection.mutable
  */
 class Scout(var ballot: Ballot, leader: Leader) {
 
-    val needResponsesFrom = mutable.Set[PID]() ++ leader.server.serverBuffs.keys
+    val needResponsesFrom = mutable.Set[PID](0 until numServers:_*)
     val responseThreshold: Int = needResponsesFrom.size / 2
 
     val pvalues = mutable.Set.empty[PValue]

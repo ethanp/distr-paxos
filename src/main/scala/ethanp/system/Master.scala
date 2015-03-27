@@ -2,7 +2,7 @@ package ethanp.system
 
 import java.util.Scanner
 
-import ethanp.node.{Server, Client, Node}
+import ethanp.node.{Client, Server}
 import ethanp.system.Common._
 
 import scala.collection.mutable
@@ -15,9 +15,14 @@ object Master {
     val clients = mutable.Map[PID, Client]()
     val servers = mutable.Map[PID, Server]()
 
+    var numServers = -1
+    var numClients = -1
+
     def getAllNodes = clients.values ++ servers.values
 
     def startAllNodes(numServers: Int, numClients: Int) {
+        this.numServers = numServers
+        this.numClients = numClients
 
         /* create nodes and start each of their servers */
 
@@ -43,8 +48,6 @@ object Master {
         servers.values.foreach(_.leader.asyncRandomDelayThenSpawnScout())
         Thread sleep 1000
     }
-
-    def send(node: Node, msg: Msg): Unit = ???
 
     def handle(input: String): Unit = handle(input split " ")
 
@@ -74,12 +77,11 @@ object Master {
              */
             case "printChatLog" ⇒
                 val clientIndex = inputWords(1).toInt
-                send(clients(clientIndex), PrintLog)
+                clients(clientIndex) printLog()
 
             /*
-             * Ensure that this BLOCKS until all messages that are going to
-             * come to consensus in paxos do, and that all clients have heard
-             * of them (is this cheating?)
+             * BLOCKS until all messages that are going to come to consensus in paxos do,
+             * and that all clients have heard them.
              */
             case "allClear" ⇒
                 var clear = false
@@ -87,18 +89,17 @@ object Master {
                 while (i < 100 && !clear) {
                     /* continue iff any proposals have been proposed but not decided */
                     val totalProposals = clients.values.map(_.proposals.values.size).sum
-                    clear = clients.values.forall(c ⇒ c.chatLog.size == totalProposals)
-                    if (!clear) Thread.sleep(20)
-                    i+=1
+                    clear = clients.values.forall(_.chatLog.size == totalProposals)
+                    if (!clear) Thread sleep 20
+                    i += 1
                 }
-                if (!clear)
-                    throw new RuntimeException("waited 2 sec, but still not 'all clear'!")
+                if (!clear) throw new RuntimeException("waited 2 sec, but still not 'all clear'!")
 
 
             /* Immediately crash the server specified by nodeIndex */
             case "crashServer" ⇒
                 val nodeIndex = inputWords(1).toInt
-                send(servers(nodeIndex), Crash)
+                ???
 
             /* TODO Restart the server specified by nodeIndex */
             case "restartServer" ⇒
@@ -111,7 +112,7 @@ object Master {
              */
             case "timeBombLeader" ⇒
                 val numMsgs: Int = inputWords(1).toInt
-                send(servers(leaderID), LeaderTimeBomb(numMsgs))
+                ???
         }
     }
 
@@ -127,11 +128,7 @@ object Master {
      *       to simplify things.
      */
     def main(args: Array[String]) {
-        val scan: Scanner = new Scanner(System.in)
-        while (scan.hasNextLine) {
-            val inputLine: Array[String] = scan.nextLine.split(" ")
-            System.out.println(inputLine(0))
-            handle(inputLine)
-        }
+        val scan = new Scanner(System in)
+        while (scan hasNextLine) handle (scan nextLine)
     }
 }
