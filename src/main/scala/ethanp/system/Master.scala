@@ -24,7 +24,7 @@ object Master {
         for (i ← 0 until numServers) {
             val server: Server = new Server(i) // blocks until ServerSocket connects
             servers.put(i, server)
-            new Thread(server).start()
+            new Thread(server).start() // start receiving messages over conns
         }
 
         for (i ← 0 until numClients) {
@@ -34,7 +34,10 @@ object Master {
         }
 
         /* connect the nodes to each other */
-        getAllNodes foreach (_ blockingInitAllConns(numClients, numServers))
+        getAllNodes foreach { node ⇒
+            node.blockingInitAllConns(numClients, numServers)
+            Thread sleep 20
+        }
 
         /* the servers run for leadership */
         servers.values.foreach(_.leader.asyncRandomDelayThenSpawnScout())

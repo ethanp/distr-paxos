@@ -12,14 +12,14 @@ import ethanp.system.Msg
  *
  * It took way too long to figure out how to accomplish this
  */
-class MsgBuff(val socket: Socket) extends Runnable {
+class MsgBuff(val socket: Socket, val localLPort: Int) extends Runnable {
 
     @volatile var alive = true
-    var senderPort = -1
+    var remoteLPort = -1
 
-    def this(port: Int) {
-        this(new Socket("0.0.0.0", port))
-        senderPort = port
+    def this(remotePort: Int, localLPort: Int) {
+        this(new Socket("0.0.0.0", remotePort), localLPort)
+        remoteLPort = remotePort
     }
 
     val inBuff = new ConcurrentLinkedQueue[Msg]()
@@ -28,6 +28,7 @@ class MsgBuff(val socket: Socket) extends Runnable {
     val ois = new ObjectInputStream(socket.getInputStream)
 
     def send(msg: Msg) {
+        println(s"$localLPort sending $msg to $remoteLPort")
         oos.writeObject(msg)
         oos.flush()
     }
