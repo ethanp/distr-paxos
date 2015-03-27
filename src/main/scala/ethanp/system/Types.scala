@@ -16,8 +16,8 @@ case object Crash extends Msg
 case class LeaderTimeBomb(numMsgs: Int) extends Msg
 
 /* PROPOSALS */
-case class ClientProposal(kID: PID, propID: Int, text: String) extends Msg
-case class SlotProp(idx: Int, clientProp: ClientProposal) extends Msg
+case class ClientProp(kID: PID, propID: Int, text: String) extends Msg
+case class SlotProp(idx: Int, clientProp: ClientProp) extends Msg
 case class PValue(ballot: Ballot, slotProp: SlotProp) extends Msg
 
 /* WIRING NODES TOGETHER */

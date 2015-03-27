@@ -39,7 +39,7 @@ class Client(nodeID: Int) extends Node(nodeID) {
     def propose(txt: String) {
         curPropID += 1
         proposals.put(curPropID, StoredProposal(txt))
-        broadcast(serverBuffs.values, ClientProposal(nodeID, curPropID, txt))
+        broadcast(serverBuffs.values, ClientProp(nodeID, curPropID, txt))
     }
 
     override def handle(msg: Msg, senderPort: Int) {

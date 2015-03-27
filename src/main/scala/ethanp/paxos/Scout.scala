@@ -15,9 +15,16 @@ class Scout(var ballot: Ballot, leader: Leader) {
     val responseThreshold: Int = needResponsesFrom.size / 2
 
     val pvalues = mutable.Set.empty[PValue]
+    def myAcceptorsBallot = leader.server.acceptor.ballotNum
 
     /* broadcast when scout is created */
-    leader.server.broadcastServers(VoteRequest(leader.server.nodeID, leader.ballotNum))
+    if (myAcceptorsBallot > ballot) {
+        leader.preempt(myAcceptorsBallot)
+    }
+    else {
+        leader.server.acceptor.ballotNum = ballot
+        leader.server.broadcastServers(VoteRequest(leader.server.nodeID, leader.ballotNum))
+    }
 
     /**
      * @return true iff this response made us elected

@@ -12,10 +12,10 @@ import scala.language.postfixOps
  */
 class Replica(server: Server) {
 
-    val proposals = mutable.Map.empty[Int, ClientProposal]
-    val decisions = mutable.Map.empty[Int, ClientProposal]
+    val proposals = mutable.Map.empty[Int, ClientProp]
+    val decisions = mutable.Map.empty[Int, ClientProp]
 
-    def propose(proposal: ClientProposal) {
+    def propose(proposal: ClientProp) {
         if (!proposals.values.toSet.contains(proposal)) {
             val usedIndices = proposals.keySet ++ decisions.keySet
             val firstIdx = (Stream from 1 dropWhile usedIndices.contains).head

@@ -33,7 +33,7 @@ class Leader(val server: Server) {
     val proposals = mutable.Set.empty[SlotProp]
 
     var lastHeartbeat = LocalTime.now
-    var heartbeatExpectorThread: Thread = null
+    var heartbeatThread : Thread = null
     var leaderID: Int = LEADER_UNKNOWN
 
     var currentScout: Scout = null
@@ -55,24 +55,25 @@ class Leader(val server: Server) {
     }
 
     def spawnScout() {
-        println(s"${myID} is running for office")
+        println(s"$myID is running for office")
         currentScout = new Scout(ballotNum, this)
     }
 
     def preempt(ballot: Ballot) {
         if (ballot > ballotNum) {
+            println(s"$myID preempted by ${ballot.nodeID}, capitulating")
             currentScout = null
             active = false
             ballotNum = Ballot(ballot.idx+1, myID)
 
             /* register for heartbeats from ballot.nodeID */
             leaderID = ballot.nodeID
-            server.sendServer(leaderID, HeartbeatReq(myID))
+//            server.sendServer(leaderID, HeartbeatReq(myID))
             lastHeartbeat = LocalTime.now
 
             /* start waiting for heartbeats */
-            heartbeatExpectorThread = new Thread(new HeartbeatExpector)
-            heartbeatExpectorThread.start()
+            heartbeatThread = new Thread(new HeartbeatExpector)
+            heartbeatThread.start()
         }
     }
 
@@ -83,7 +84,7 @@ class Leader(val server: Server) {
         }
 
         if (response.ballot > currentScout.ballot) preempt(response.ballot)
-        else if (currentScout receiveVoteResponse response) gotElected()
+        else if (currentScout.receiveVoteResponse(response) && leaderID != myID) gotElected()
     }
 
     /* TODO this should be implicit method on mutable.Set[SlotProp] called "⊕" */
@@ -95,15 +96,29 @@ class Leader(val server: Server) {
      * in PMMC this would be reception of the "adopted" message
      */
     def gotElected() {
+        if (leaderID != myID && heartbeatThread != null) heartbeatThread.interrupt()
         println(s"$myID got elected")
         bigPlus(proposals, currentScout.pvalues.toSet)
         active = true // this will cancel any outstanding HeartbeatExpector
         leaderID = myID
+
+        /* start heartbeating */
+        heartbeatThread = new Thread(new Heartbeater)
+        heartbeatThread.start()
     }
 
     def receiveHeartbeatFrom(pid: PID) {
         if (!active && (leaderID != LEADER_UNKNOWN)) {
             lastHeartbeat = LocalTime.now
+        }
+    }
+
+    class Heartbeater extends Runnable {
+        override def run() {
+            while (active && !Thread.interrupted()) {
+                Thread sleep Common.heartbeatTimeout * 2/3
+                server broadcastServers Heartbeat(myID)
+            }
         }
     }
 
