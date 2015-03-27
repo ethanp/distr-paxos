@@ -3,7 +3,7 @@ package ethanp.node
 import java.net.ServerSocket
 
 import ethanp.paxos.MsgBuff
-import ethanp.system.Common.PID
+import ethanp.system.Common.{printStartup, PID}
 import ethanp.system._
 
 import scala.collection.concurrent.TrieMap
@@ -34,11 +34,11 @@ abstract class Node(nodeIdx: Int) extends Runnable {
                 nc match {
                     case ClientConnection(nodeId) =>
                         clientBuffs.put(nodeId, msgBuff)
-                        println(s"$listenPort rcvd conn from client $nodeId")
+                        printStartup(s"$listenPort rcvd conn from client $nodeId")
                         msgBuff.remoteLPort = Common.clientPortFromPid(nodeId)
                     case ServerConnection(nodeId) =>
                         serverBuffs.putIfAbsent(nodeId, msgBuff)
-                        println(s"$listenPort rcvd conn from server $nodeId")
+                        printStartup(s"$listenPort rcvd conn from server $nodeId")
                         msgBuff.remoteLPort = Common.serverPortFromPid(nodeId)
                 }
             }
@@ -48,7 +48,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
     def startListening() {
         alive = true
         serverThread = new Thread(server)
-        println("node listening at "+server.serverSocket.getLocalPort)
+        printStartup("node listening at "+server.serverSocket.getLocalPort)
         serverThread.start()
     }
 
@@ -59,7 +59,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
             if (!buffs.contains(i)) {
                 val buff = new MsgBuff(portFromPid(i), listenPort)
                 new Thread(buff).start()
-                buff.send(myConnObj)
+                buff send myConnObj
                 buffs.put(i, buff)
             }
         }

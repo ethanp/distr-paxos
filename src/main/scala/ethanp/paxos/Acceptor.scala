@@ -34,7 +34,7 @@ class Acceptor(server: Server) {
             server.sendServer(prop.nodeID, pValResponse)
         }
         else {
-            server.leader.ongoingCommanders.get(prop.pValue) match {
+            server.leader.ongoingCommanders.get(prop.pValue.slotProp) match {
                 case Some(commander) => commander receivePValResponse pValResponse
                 case None => throw new RuntimeException("wtf mate")
             }
