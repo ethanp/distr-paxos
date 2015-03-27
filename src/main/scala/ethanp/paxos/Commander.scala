@@ -14,10 +14,11 @@ class Commander(val pValue: PValue, leader: Leader) {
     val needResponsesFrom = mutable.Set[PID]() ++ leader.server.serverBuffs.keys + leader.myID
     val responseThreshold: Int = (needResponsesFrom.size+1) / 2
 
-    /* broadcast PValProp upon creation */
-    val prop = PValProp(leader.myID, pValue)
-    leader.server.acceptor receivePValProp prop // locally
-    leader.server broadcastServers prop         // remotely
+    def broadcastProposal() {
+        val prop = PValProp(leader.myID, pValue)
+        leader.server.acceptor receivePValProp prop // locally
+        leader.server broadcastServers prop // remotely
+    }
 
     def receivePValResponse(pValResponse: PValResponse) {
         if (pValResponse.pValue.ballot == pValue.ballot) {

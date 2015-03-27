@@ -29,15 +29,17 @@ class Acceptor(server: Server) {
 
         val pValResponse = PValResponse(server.nodeID, PValue(ballotNum, prop.pValue.slotProp))
 
-        /* responses within this server needn't be sent over the wire */
-        if (prop.nodeID != server.nodeID) {
-            server.sendServer(prop.nodeID, pValResponse)
-        }
-        else {
+        // local
+        if (prop.commanderID == server.nodeID) {
             server.leader.ongoingCommanders.get(prop.pValue.slotProp) match {
                 case Some(commander) => commander receivePValResponse pValResponse
                 case None => throw new RuntimeException("wtf mate")
             }
+        }
+
+        // remote
+        else {
+            server.sendServer(prop.commanderID, pValResponse)
         }
     }
 }

@@ -34,7 +34,7 @@ class Leader(val server: Server) {
 
     var lastHeartbeat = LocalTime.now
     var heartbeatThread : Thread = null
-    var leaderID: Int = LEADER_UNKNOWN
+    var activeLeaderID: Int = LEADER_UNKNOWN
 
     var currentScout: Scout = null
     val ongoingCommanders = mutable.Map.empty[SlotProp, Commander]
@@ -42,7 +42,7 @@ class Leader(val server: Server) {
     def asyncRandomDelayThenSpawnScout() {
         new Thread {
             Thread.sleep(Random.nextInt(10) * 100)
-            if (leaderID == LEADER_UNKNOWN) spawnScout()
+            if (activeLeaderID == LEADER_UNKNOWN) spawnScout()
         }
     }
 
@@ -51,6 +51,7 @@ class Leader(val server: Server) {
             println(s"$myID issuing commander")
             val pValue = PValue(ballotNum, proposal)
             ongoingCommanders += (proposal → new Commander(pValue, this))
+            ongoingCommanders(proposal).broadcastProposal()
         }
     }
 
@@ -65,7 +66,7 @@ class Leader(val server: Server) {
             currentScout = null
             active = false
             ballotNum = Ballot(ballot.idx+1, myID)
-            leaderID = ballot.nodeID
+            activeLeaderID = ballot.nodeID
             lastHeartbeat = LocalTime.now
 
             /* start waiting for heartbeats */
@@ -92,7 +93,7 @@ class Leader(val server: Server) {
         }
 
         if (response.ballot > currentScout.ballot) preempt(response.ballot)
-        else if (currentScout.receiveVoteResponse(response) && leaderID != myID) gotElected()
+        else if (currentScout.receiveVoteResponse(response) && activeLeaderID != myID) gotElected()
     }
 
     def receivePValResp(response: PValResponse) {
@@ -111,11 +112,11 @@ class Leader(val server: Server) {
      * in PMMC this would be reception of the "adopted" message
      */
     def gotElected() {
-        if (leaderID != myID && heartbeatThread != null) heartbeatThread.interrupt()
+        if (activeLeaderID != myID && heartbeatThread != null) heartbeatThread.interrupt()
         println(s"$myID got elected")
         bigPlus(proposals, currentScout.pvalues.toSet)
         active = true // this will cancel any outstanding HeartbeatExpector
-        leaderID = myID
+        activeLeaderID = myID
 
         /* start heartbeating */
         heartbeatThread = new Thread(new Heartbeater)
@@ -141,7 +142,7 @@ class Leader(val server: Server) {
       *      * Worst comes to worst, I'll take a gander at the ol' Raft paper.
       */
     def receiveHeartbeatFrom(pid: PID) {
-        if (!active && (leaderID != LEADER_UNKNOWN)) {
+        if (!active && (activeLeaderID != LEADER_UNKNOWN)) {
             lastHeartbeat = LocalTime.now
         }
     }
@@ -161,7 +162,7 @@ class Leader(val server: Server) {
                 val startedWaiting = LocalTime.now
                 Thread sleep Common.heartbeatTimeout
                 if (lastHeartbeat isBefore startedWaiting) {
-                    println(s"$myID timedOut on leader $leaderID")
+                    println(s"$myID timedOut on leader $activeLeaderID")
                     spawnScout()
                 }
             }

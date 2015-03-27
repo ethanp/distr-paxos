@@ -20,7 +20,7 @@ case class SlotProp(idx: Int, clientProp: ClientProp) extends Msg
 case class PValue(ballot: Ballot, slotProp: SlotProp) extends Msg
 
 /* PROPOSALS */
-case class PValProp(nodeID: PID, pValue: PValue) extends Msg     // sent for "p2a"
+case class PValProp(commanderID: PID, pValue: PValue) extends Msg     // sent for "p2a"
 case class PValResponse(nodeID: PID, pValue: PValue) extends Msg // sent for "p2b
 
 case class Decision(slotProp: SlotProp) extends Msg
