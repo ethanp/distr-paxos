@@ -108,7 +108,8 @@ object Master {
                 while (i < 200 && !clear) {
                     /* continue iff any proposals have been proposed but not decided */
                     val totalProposals = clients.values.map(_.proposals.values.size).sum
-                    clear = clients.values.forall(_.chatLog.size == totalProposals)
+                    val chatLogSizes = clients.values map (_.chatLog.size)
+                    clear = chatLogSizes forall (_ >= totalProposals)
                     if (!clear) Thread sleep 20
                     i += 1
                 }

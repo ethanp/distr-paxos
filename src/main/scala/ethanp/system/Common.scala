@@ -17,8 +17,11 @@ object Common {
     def serverPortFromPid(pid : PID) = pid + serverOffset
     def clientPortFromPid(pid : PID) = pid + clientOffset
 
-    val heartbeatTimeout: Long = 300
+    val heartbeatTimeout: Long = 200
 
     val logStartup = false
     def printStartup(x: Any) = if (logStartup) println(x)
+
+    val logHeartbeats = false
+    def printHeartbeat(s: Any) = if (logHeartbeats) println(s)
 }

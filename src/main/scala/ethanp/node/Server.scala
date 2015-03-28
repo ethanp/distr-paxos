@@ -18,12 +18,17 @@ class Server(val nodeID: Int) extends Node(nodeID) {
      * 1. the NodeServer-Thread will stop receiving incoming NodeConnections
      * 2. the Node-Thread will stop reading incoming messages, simply discarding them instead
      * 3. Commanders and Scouts are slaughtered (can't receive messages any more, probably GC'd)
-     * 4. replica, leader, and acceptor are discarded
+     * 4. heartbeats are cancelled
+     * 5. replica, leader, and acceptor are discarded
      */
     def crash() {
         println(s"server $nodeID crashing!")
         alive = false
         leader.currentScout = null
+        if (leader.heartbeatThread != null) {
+            leader.heartbeatThread.interrupt()
+            leader.heartbeatThread = null
+        }
         leader.ongoingCommanders.clear()
         leader = null
         replica = null
@@ -43,8 +48,11 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     }
 
     override def handle(msg: Msg, senderPort: PID) {
-        if (!msg.isInstanceOf[Heartbeat])
-            println(s"server $nodeID rcvd $msg from $senderPort")
+        val s = s"server $nodeID rcvd $msg from $senderPort"
+        msg match {
+            case m: Heartbeat ⇒ printHeartbeat(s)
+            case _ ⇒ println(s)
+        }
         msg match {
             case proposal@ClientProp(_,_,_)     ⇒ replica propose proposal
             case proposal@SlotProp(_,_)         ⇒ leader propose proposal

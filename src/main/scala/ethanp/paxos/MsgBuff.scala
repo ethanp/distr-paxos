@@ -29,14 +29,16 @@ class MsgBuff(val socket: Socket, val localLPort: Int) extends Runnable {
     val ois = new ObjectInputStream(socket.getInputStream)
 
     def send(msg: Msg) {
-        val s = s"$localLPort sending $msg to $remoteLPort"
-        msg match {
-            case x: Heartbeat ⇒ ; // ignore
-            case x: NodeConnection ⇒ printStartup(s)
-            case _ ⇒ println(s)
+        this.synchronized {
+            val s = s"$localLPort sending $msg to $remoteLPort"
+            msg match {
+                case x: Heartbeat ⇒ ; // ignore
+                case x: NodeConnection ⇒ printStartup(s)
+                case _ ⇒ println(s)
+            }
+            oos.writeObject(msg)
+            oos.flush()
         }
-        oos.writeObject(msg)
-        oos.flush()
     }
 
     def blockTillMsgRcvd(): Msg = {

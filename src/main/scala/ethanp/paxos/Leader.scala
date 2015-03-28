@@ -56,6 +56,7 @@ class Leader(val server: Server) {
             ongoingCommanders += (proposal → new Commander(pValue, this))
             ongoingCommanders(proposal).broadcastProposal()
         }
+        else if (activeLeaderID == LEADER_UNKNOWN) spawnScout()
     }
 
     def spawnScout() {
@@ -77,7 +78,8 @@ class Leader(val server: Server) {
             heartbeatThread.start()
         }
         else {
-            println(s"$myID can't capitulate, ballot too low. Is this an ERROR?")
+            println(s"$myID can't capitulate, ballot too low. Is this an ERROR? spawning scout")
+            if (active) spawnScout()
         }
     }
 
