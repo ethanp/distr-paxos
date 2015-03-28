@@ -12,27 +12,35 @@ import scala.collection.mutable
  */
 class Scout(var ballot: Ballot, leader: Leader) {
 
-    val needResponsesFrom = mutable.Set[PID](0 until numServers:_*)
-    val responseThreshold: Int = needResponsesFrom.size / 2
-
+    val waitFor = mutable.Set[PID](0 until numServers:_*)
+    val responseThreshold: Int = waitFor.size / 2
     val pvalues = mutable.Set.empty[PValue]
-    def myAcceptorsBallot = leader.server.acceptor.ballotNum
+    val acceptor = leader.server.acceptor
 
     /* broadcast when scout is created */
-    if (myAcceptorsBallot > ballot) {
-        leader.preempt(myAcceptorsBallot)
+
+    // for my local acceptor, simply query it
+    if (acceptor.ballotNum > ballot) {
+        leader preempt acceptor.ballotNum
     }
     else {
-        leader.server.acceptor.ballotNum = ballot
+        // local acceptor should "vote" for this scout
+        acceptor.ballotNum = ballot
+        receiveVoteResponse(VoteResponse(leader.myID, ballot, acceptor.accepted.toSet))
+
+        // local accepted, so ask everyone else
         leader.server.broadcastServers(VoteRequest(leader.server.nodeID, leader.ballotNum))
     }
 
     /**
      * @return true iff this response made us elected
+     *
+     * NB: Preemption if need-be happens in the Leader
+     *     before this gets called
      */
     def receiveVoteResponse(response: VoteResponse): Boolean = {
-        needResponsesFrom remove response.nodeID
+        waitFor remove response.nodeID
         pvalues ++= response.accepteds
-        needResponsesFrom.size <= responseThreshold
+        waitFor.size <= responseThreshold
     }
 }

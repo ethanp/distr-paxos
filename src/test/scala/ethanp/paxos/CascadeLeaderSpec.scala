@@ -19,5 +19,5 @@ class CascadeLeaderSpec extends WordSpec with MsgSpec {
     handle("allClear")
     handle("sendMessage 2 helloWorld2")
     handle("allClear")
-    
+
 }

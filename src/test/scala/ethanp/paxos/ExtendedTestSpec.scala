@@ -11,10 +11,10 @@ import org.scalatest.WordSpec
 class ExtendedTestSpec extends WordSpec with MsgSpec {
 
   val t1 = "hello_3"
-  val t2 = "hello_4"
   val clientProp1 = ClientProp(3, 1, t1)
   val slotProp1 = SlotProp(1, clientProp1)
 
+  val t2 = "hello_4"
   val clientProp2 = ClientProp(4, 1, t2)
   val slotProp2 = SlotProp(2, clientProp2)
 
