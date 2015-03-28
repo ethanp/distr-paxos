@@ -12,11 +12,17 @@ import scala.collection.mutable
 class Acceptor(server: Server) {
 
     val accepted = mutable.Set.empty[PValue]
-    var ballotNum = Ballot turnstyle server.nodeID
+    var ballotNum = Ballot firstFor server.nodeID
 
     /* P1A */
     def receiveVoteRequest(request: VoteRequest) {
+
         if (request.ballot > ballotNum) ballotNum = request.ballot
+
+        /* preempt the leader if req'd */
+        if (server.leader.active && request.ballot > server.leader.ballotNum)
+            server.leader preempt request.ballot
+
         server.sendServer(request.nodeID, VoteResponse(server.nodeID, ballotNum, accepted.toSet))
     }
 

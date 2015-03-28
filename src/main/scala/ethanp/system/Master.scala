@@ -4,6 +4,7 @@ import java.util.Scanner
 
 import ethanp.node.{Client, Server}
 import ethanp.paxos.Leader
+import ethanp.paxos.Leader.LEADER_UNKNOWN
 import ethanp.system.Common._
 
 import scala.collection.mutable
@@ -27,13 +28,17 @@ object Master {
     def getLeader: Leader = {
         for (s ← servers.values) {
             if (s.leader != null) {
-                val t = servers(s.leader.activeLeaderID)
-                if (t.leader != null) {
-                    return t.leader
+                val activeLeaderID = s.leader.activeLeaderID
+                if (activeLeaderID != LEADER_UNKNOWN) {
+                    val t = servers(activeLeaderID)
+                    if (t.leader != null) {
+                        return t.leader
+                    }
                 }
             }
         }
-        throw new RuntimeException("no hay un jefe ahora señor")
+        println("no hay un jefe ahora señor")
+        null
     }
 
     def startAllNodes(numServers: Int, numClients: Int) {
@@ -111,10 +116,13 @@ object Master {
                     val chatLogSizes = clients.values map (_.chatLog.size)
                     val proposalsDecided = chatLogSizes forall (_ >= totalProposals)
 
-                    val aLeaderID = getLeader.myID
-                    val leaderAgreement = servers.values
-                            .filter(_.alive)
-                            .forall(_.leader.activeLeaderID == aLeaderID)
+                    val leaderAgreement = {
+                        if (getLeader == null) false
+                        else {
+                            servers.values.filter(_.alive)
+                                    .forall(_.leader.activeLeaderID == getLeader.myID)
+                        }
+                    }
 
                     clear = proposalsDecided && leaderAgreement
                     if (!clear) Thread sleep 20

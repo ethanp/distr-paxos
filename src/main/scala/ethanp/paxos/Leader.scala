@@ -12,8 +12,7 @@ import scala.collection.mutable
  * 3/25/15
  */
 class Leader(val server: Server) {
-
-    val LEADER_UNKNOWN = -1
+    import Leader._
     val myID = server.nodeID
 
     /**
@@ -65,6 +64,11 @@ class Leader(val server: Server) {
     def preempt(ballot: Ballot) {
         if (ballot > ballotNum) {
             println(s"$myID preempted by ${ballot.nodeID}, capitulating")
+
+            // cancel outstanding heartbeater
+            if (heartbeatThread != null && heartbeatThread.isAlive)
+                heartbeatThread.interrupt()
+
             currentScout = null
             active = false
             ballotNum = Ballot(ballot.idx+1, myID)
@@ -147,13 +151,14 @@ class Leader(val server: Server) {
       *      * Worst comes to worst, I'll take a gander at the ol' Raft paper.
       */
     def receiveHeartbeat(heartbeat: Heartbeat) {
-        if (!active) {
+        if (heartbeat.ballot > ballotNum) {
+            preempt(heartbeat.ballot)
+        }
+        else if (!active) {
             if (activeLeaderID == heartbeat.nodeID) {
                 lastHeartbeat = LocalTime.now
             }
-            // else if (heartbeat.ballot) /// Hmm...?
         }
-
     }
 
     class Heartbeater extends Runnable {
@@ -161,8 +166,9 @@ class Leader(val server: Server) {
             while (active && !Thread.interrupted()) {
                 try Thread sleep Common.heartbeatTimeout * 2/3
                 catch {
-                    case e: InterruptedException ⇒ // TODO does this make sense?
-                        println(s"$myID heartbeater interrupted, ignoring.")
+                    case e: InterruptedException ⇒
+                        println(s"$myID heartbeater interrupted, stopping heartbeats.")
+                        return
                 }
                 server broadcastServers Heartbeat(myID, ballotNum)
             }
@@ -189,3 +195,6 @@ class Leader(val server: Server) {
     }
 }
 
+object Leader {
+    val LEADER_UNKNOWN = -1
+}

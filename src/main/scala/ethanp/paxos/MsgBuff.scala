@@ -56,7 +56,7 @@ class MsgBuff(val socket: Socket, val localLPort: Int) extends Runnable {
             val rcvdMsg = ois.readObject().asInstanceOf[Msg] // this is where we block
             inBuff.offer(rcvdMsg)
             if (inBuff.size() > 5) {
-                println(s"just letting you know the buffer has ${inBuff.size()} msgs")
+                println(s"MsgBuff $remoteLPort -> $localLPort has ${inBuff.size()} msgs")
             }
         }
     }
