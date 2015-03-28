@@ -101,6 +101,6 @@ abstract class Node(nodeIdx: Int) extends Runnable {
 
     def handle(msg: Msg, senderPort: PID): Unit
 
-    def broadcast(buffs: Iterable[MsgBuff], msg: Msg) = buffs foreach (_ send msg)
+    def broadcast(buffs: Iterable[MsgBuff], msg: Msg)
     def broadcastServers(msg: Msg) = broadcast(serverBuffs.values, msg)
 }

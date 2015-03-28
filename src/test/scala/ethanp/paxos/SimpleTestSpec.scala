@@ -14,6 +14,7 @@ class SimpleTestSpec extends WordSpec with MsgSpec {
 
   handle("start 3 3")
   handle("allClear")
+
   "receiving start 3 3" should {
     "create all nodes" in {
       assert(Stream(clients, servers) forall (_.size == 3))
@@ -123,6 +124,7 @@ class SimpleTest2Spec extends WordSpec with MsgSpec {
         allServers(_.replica.proposals(1) == clientProp)
       }
       "all leaders have received the proposal" in {
+        allServers(_.leader.proposals.size == 1)
         allServers(_.leader.proposals.head.clientProp == clientProp)
       }
       "no one has commanders [anymore]" in { // assumes everything has already fully propagated

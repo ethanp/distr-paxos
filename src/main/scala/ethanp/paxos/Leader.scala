@@ -12,6 +12,7 @@ import scala.collection.mutable
  * 3/25/15
  */
 class Leader(val server: Server) {
+
     import Leader._
     val myID = server.nodeID
 
@@ -21,7 +22,7 @@ class Leader(val server: Server) {
      *
      * This excludes heartbeat messages if you use them.
      */
-    @volatile var timeBomb = -1
+    @volatile var timeBomb = NO_TIMEBOMB
     def setTimebombAfter(numMsgs: Int) {
         if (numMsgs == 0) server.crash()
         else timeBomb = numMsgs
@@ -45,6 +46,13 @@ class Leader(val server: Server) {
             if (activeLeaderID == LEADER_UNKNOWN) spawnScout()
         }
     }
+
+    /** @return true iff we just crashed */
+    def bombTick: Boolean = if (timeBomb > 0) {
+        timeBomb -= 1  // for the local "send"
+        if (timeBomb == 0) server.crash()
+        timeBomb == 0
+    } else false
 
     def propose(proposal:  SlotProp) {
 
@@ -201,4 +209,5 @@ class Leader(val server: Server) {
 
 object Leader {
     val LEADER_UNKNOWN = -1
+    val NO_TIMEBOMB = -1
 }

@@ -1,5 +1,6 @@
 package ethanp.node
 
+import ethanp.paxos.MsgBuff
 import ethanp.system._
 
 import scala.collection.mutable
@@ -55,12 +56,11 @@ class Client(nodeID: Int) extends Node(nodeID) {
                       s"c $nodeID rcvd $msg but already has ${chatLog(idx)} there")
                 }
 
-            /* UNIMPLEMENTED */
-            case AllClear => ???
-
             case _ ⇒ throw new RuntimeException("Unhandled msg: "+msg)
         }
     }
+
+    override def broadcast(buffs: Iterable[MsgBuff], msg: Msg): Unit = buffs foreach (_ send msg)
 }
 
 case class StoredProposal(text: String, var responded: Boolean = false)

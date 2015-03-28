@@ -1,6 +1,6 @@
 package ethanp.node
 
-import ethanp.paxos.{Acceptor, Leader, Replica}
+import ethanp.paxos.{MsgBuff, Acceptor, Leader, Replica}
 import ethanp.system.Common._
 import ethanp.system._
 
@@ -99,4 +99,9 @@ class Server(val nodeID: Int) extends Node(nodeID) {
             case _ ⇒ throw new RuntimeException("unexpected msg: "+msg)
         }
     }
+
+    override def broadcast(buffs: Iterable[MsgBuff], msg: Msg): Unit =
+        for (b ← buffs)
+            if (!leader.bombTick) b send msg
+            else return
 }

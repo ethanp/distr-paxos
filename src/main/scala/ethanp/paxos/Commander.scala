@@ -17,8 +17,12 @@ class Commander(val pValue: PValue, leader: Leader) {
 
     def broadcastProposal() {
         val prop = PValProp(leader.myID, pValue)
+
         leader.server.acceptor receivePValProp prop // locally
-        leader.server broadcastServers prop // remotely
+
+        // If there's a timebomb ticking, act accordingly
+        if (!leader.bombTick)
+            leader.server broadcastServers prop // remotely
     }
 
     def receivePValResponse(pValResponse: PValResponse) {
