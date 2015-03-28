@@ -119,7 +119,7 @@ object Master {
             /* Immediately crash the server specified by nodeIndex */
             case "crashServer" ⇒
                 val nodeIndex = inputWords(1).toInt
-                ???
+                servers(nodeIndex).crash()
 
             /* Restart the server specified by nodeIndex */
             case "restartServer" ⇒
