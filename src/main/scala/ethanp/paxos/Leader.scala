@@ -3,11 +3,9 @@ package ethanp.paxos
 import java.time.LocalTime
 
 import ethanp.node.Server
-import ethanp.system.Common.PID
 import ethanp.system._
 
 import scala.collection.mutable
-import scala.util.Random
 
 /**
  * Ethan Petuchowski
@@ -42,9 +40,9 @@ class Leader(val server: Server) {
     var currentScout: Scout = null
     val ongoingCommanders = mutable.Map.empty[SlotProp, Commander]
 
-    def asyncRandomDelayThenSpawnScout() {
+    def asyncDelayThenSpawnScout() {
         new Thread {
-            Thread.sleep(Random.nextInt(10) * 100)
+            Thread.sleep((Master.numServers - myID) * 100)
             if (activeLeaderID == LEADER_UNKNOWN) spawnScout()
         }
     }
@@ -148,17 +146,25 @@ class Leader(val server: Server) {
       *      * My guess is that I'll have to include a ballot number in the heartbeat.
       *      * Worst comes to worst, I'll take a gander at the ol' Raft paper.
       */
-    def receiveHeartbeatFrom(pid: PID) {
-        if (!active && (activeLeaderID != LEADER_UNKNOWN)) {
-            lastHeartbeat = LocalTime.now
+    def receiveHeartbeat(heartbeat: Heartbeat) {
+        if (!active) {
+            if (activeLeaderID == heartbeat.nodeID) {
+                lastHeartbeat = LocalTime.now
+            }
+            // else if (heartbeat.ballot) /// Hmm...?
         }
+
     }
 
     class Heartbeater extends Runnable {
         override def run() {
             while (active && !Thread.interrupted()) {
-                Thread sleep Common.heartbeatTimeout * 2/3
-                server broadcastServers Heartbeat(myID)
+                try Thread sleep Common.heartbeatTimeout * 2/3
+                catch {
+                    case e: InterruptedException ⇒ // TODO does this make sense?
+                        println(s"$myID heartbeater interrupted, ignoring.")
+                }
+                server broadcastServers Heartbeat(myID, ballotNum)
             }
         }
     }
@@ -176,6 +182,7 @@ class Leader(val server: Server) {
                 if (lastHeartbeat isBefore startedWaiting) {
                     println(s"$myID timedOut on leader $activeLeaderID")
                     spawnScout()
+                    return
                 }
             }
         }

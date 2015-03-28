@@ -61,7 +61,7 @@ object Master {
         }
 
         /* the servers run for leadership */
-        servers.values.foreach(_.leader.asyncRandomDelayThenSpawnScout())
+        servers.values.foreach(_.leader.asyncDelayThenSpawnScout())
         Thread sleep 1000
     }
 
@@ -100,7 +100,7 @@ object Master {
 
             /*
              * BLOCKS until all messages that are going to come to consensus in paxos do,
-             * and that all clients have heard them.
+             * and that all clients have heard them. (and everyone alive agrees on the leader)
              */
             case "allClear" ⇒
                 var clear = false
@@ -109,7 +109,14 @@ object Master {
                     /* continue iff any proposals have been proposed but not decided */
                     val totalProposals = clients.values.map(_.proposals.values.size).sum
                     val chatLogSizes = clients.values map (_.chatLog.size)
-                    clear = chatLogSizes forall (_ >= totalProposals)
+                    val proposalsDecided = chatLogSizes forall (_ >= totalProposals)
+
+                    val aLeaderID = getLeader.myID
+                    val leaderAgreement = servers.values
+                            .filter(_.alive)
+                            .forall(_.leader.activeLeaderID == aLeaderID)
+
+                    clear = proposalsDecided && leaderAgreement
                     if (!clear) Thread sleep 20
                     i += 1
                 }
@@ -124,7 +131,7 @@ object Master {
             /* Restart the server specified by nodeIndex */
             case "restartServer" ⇒
                 val nodeIndex = inputWords(1).toInt
-                ???
+                servers(nodeIndex).restart()
 
             /*
              * Instruct the leader to crash after sending the number of paxos

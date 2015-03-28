@@ -36,7 +36,7 @@ case class VoteRequest(nodeID: PID, ballot: Ballot) extends Msg
 case class VoteResponse(nodeID: PID, ballot: Ballot, accepteds: Set[PValue]) extends Msg
 
 /* OPTIMIZATION MESSAGES */
-case class Heartbeat(nodeID: PID) extends Msg
+case class Heartbeat(nodeID: PID, ballot: Ballot) extends Msg
 
 /* PAXOS OBJECTS */
 case class Ballot(idx: Int, nodeID: PID) extends Ordered[Ballot] {

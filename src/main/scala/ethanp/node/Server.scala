@@ -15,24 +15,53 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     var acceptor = new Acceptor(this)
 
     /**
-     * 1. the NodeServer-Thread will stop receiving incoming NodeConnections
+     * 1. (actually nevermind) the NodeServer-Thread will stop receiving incoming NodeConnections
      * 2. the Node-Thread will stop reading incoming messages, simply discarding them instead
-     * 3. Commanders and Scouts are slaughtered (can't receive messages any more, probably GC'd)
-     * 4. heartbeats are cancelled
+     * 3. any outstanding Commanders and Scouts are slaughtered
+     * 4. any outstanding heartbeats are cancelled
      * 5. replica, leader, and acceptor are discarded
      */
     def crash() {
         println(s"server $nodeID crashing!")
+
+        // 2
         alive = false
+
+        // 3
         leader.currentScout = null
+        leader.ongoingCommanders.clear()
+
+        // 4
         if (leader.heartbeatThread != null) {
             leader.heartbeatThread.interrupt()
             leader.heartbeatThread = null
         }
-        leader.ongoingCommanders.clear()
+
+        // 5
         leader = null
         replica = null
         acceptor = null
+    }
+
+    /**
+     * 1. replica, leader, and acceptor are renewed
+     * 2. stop discarding incoming messages
+     * 3. resume receiving incoming NodeConnections
+     */
+    def restart() {
+        println(s"server $nodeID restarting")
+
+        // 1
+        replica = new Replica(this)
+        leader = new Leader(this)
+        acceptor = new Acceptor(this)
+
+        // 2
+        alive = true
+
+        // 3
+        serverThread.resume()
+
     }
 
     def sendClient(id: PID, msg: Msg) = clientBuffs(id) send msg
@@ -44,7 +73,7 @@ class Server(val nodeID: Int) extends Node(nodeID) {
 
     override def blockingInitAllConns(numClients: Int, numServers: Int) {
         blockingConnectToClients(0 until numClients)
-        blockingConnectToServers(0 until numClients filterNot (_ == nodeID))
+        blockingConnectToServers(0 until numServers filterNot (_ == nodeID))
     }
 
     override def handle(msg: Msg, senderPort: PID) {
@@ -56,8 +85,8 @@ class Server(val nodeID: Int) extends Node(nodeID) {
         msg match {
             case proposal@ClientProp(_,_,_)     ⇒ replica propose proposal
             case proposal@SlotProp(_,_)         ⇒ leader propose proposal
-            case Heartbeat(serverID)            ⇒ leader receiveHeartbeatFrom serverID
-            case decision@Decision(_)           ⇒ replica receiveDecision decision
+            case heartbeat@Heartbeat(_,_)       ⇒ leader receiveHeartbeat heartbeat
+            case Decision(slotProp)             ⇒ replica receiveDecisionFor slotProp
 
             /* p1a, p1b */
             case voteReq@VoteRequest(_,_)       ⇒ acceptor receiveVoteRequest voteReq

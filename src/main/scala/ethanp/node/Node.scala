@@ -26,7 +26,7 @@ abstract class Node(nodeIdx: Int) extends Runnable {
         val serverSocket = new ServerSocket(listenPort)
 
         override def run() {
-            while (alive) {
+            while (true) {
                 val socket = serverSocket.accept()
                 val msgBuff = new MsgBuff(socket, listenPort)
                 new Thread(msgBuff).start()
@@ -77,7 +77,6 @@ abstract class Node(nodeIdx: Int) extends Runnable {
     def myConnObj: NodeConnection
 
     def offset: Int
-
 
     override def run() {
         while (true) {

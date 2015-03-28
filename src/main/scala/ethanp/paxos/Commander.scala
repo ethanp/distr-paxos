@@ -27,7 +27,7 @@ class Commander(val pValue: PValue, leader: Leader) {
             if (needResponsesFrom.size <= responseThreshold) {
                 println(s"${leader.myID} decided on $pValue")
                 val dec = Decision(pValue.slotProp)
-                leader.server.replica receiveDecision dec
+                leader.server.replica receiveDecisionFor dec.slotProp
                 leader.server broadcastServers dec
                 exit()
             }

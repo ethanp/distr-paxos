@@ -39,8 +39,8 @@ class Replica(server: Server) {
         slotNum += 1
     }
 
-    def receiveDecision(decision: Decision) {
-        decisions.put(decision.slotProp.idx, decision.slotProp.clientProp)
+    def receiveDecisionFor(slotProp: SlotProp) {
+        decisions.put(slotProp.idx, slotProp.clientProp)
         while (decisions contains slotNum) {
             val p = decisions get slotNum
             val pPrime = proposals get slotNum

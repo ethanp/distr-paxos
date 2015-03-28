@@ -19,7 +19,7 @@ object Common {
 
     val heartbeatTimeout: Long = 200
 
-    val logStartup = false
+    val logStartup = true
     def printStartup(x: Any) = if (logStartup) println(x)
 
     val logHeartbeats = false
