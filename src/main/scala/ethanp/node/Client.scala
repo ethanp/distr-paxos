@@ -17,11 +17,7 @@ class Client(nodeID: Int) extends Node(nodeID) {
 
     val proposals = mutable.Map[Int, StoredProposal]()
 
-    override def restart(): Unit = ???
-
     def printLog() = chatLog foreach { case (k, v) ⇒ println(s"$k ${v.senderID} ${v.text}") }
-
-    override def init() {}
 
     override def offset = Common.clientOffset
 

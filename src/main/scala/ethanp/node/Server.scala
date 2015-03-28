@@ -10,11 +10,25 @@ import ethanp.system._
  */
 class Server(val nodeID: Int) extends Node(nodeID) {
 
-    val replica = new Replica(this)
-    val leader = new Leader(this)
-    val acceptor = new Acceptor(this)
+    var replica = new Replica(this)
+    var leader = new Leader(this)
+    var acceptor = new Acceptor(this)
 
-    override def init(): Unit = ???
+    /**
+     * 1. the NodeServer-Thread will stop receiving incoming NodeConnections
+     * 2. the Node-Thread will stop reading incoming messages, simply discarding them instead
+     * 3. Commanders and Scouts are slaughtered (can't receive messages any more, probably GC'd)
+     * 4. replica, leader, and acceptor are discarded
+     */
+    def crash() {
+        println(s"server $nodeID crashing!")
+        alive = false
+        leader.currentScout = null
+        leader.ongoingCommanders.clear()
+        leader = null
+        replica = null
+        acceptor = null
+    }
 
     def sendClient(id: PID, msg: Msg) = clientBuffs(id) send msg
     def broadcastClients(msg: Msg) = broadcast(clientBuffs.values, msg)

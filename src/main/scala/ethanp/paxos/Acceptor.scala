@@ -31,6 +31,8 @@ class Acceptor(server: Server) {
 
         // local
         if (prop.commanderID == server.nodeID) {
+
+            // reply to the local commander
             server.leader.ongoingCommanders.get(prop.pValue.slotProp) match {
                 case Some(commander) => commander receivePValResponse pValResponse
                 case None => throw new RuntimeException("wtf mate")

@@ -3,6 +3,7 @@ package ethanp.system
 import java.util.Scanner
 
 import ethanp.node.{Client, Server}
+import ethanp.paxos.Leader
 import ethanp.system.Common._
 
 import scala.collection.mutable
@@ -19,6 +20,21 @@ object Master {
     var numClients = -1
 
     def getAllNodes = clients.values ++ servers.values
+
+    /**
+     * might not work before calling "allClear".
+     */
+    def getLeader: Leader = {
+        for (s ← servers.values) {
+            if (s.leader != null) {
+                val t = servers(s.leader.activeLeaderID)
+                if (t.leader != null) {
+                    return t.leader
+                }
+            }
+        }
+        throw new RuntimeException("no hay un jefe ahora señor")
+    }
 
     def startAllNodes(numServers: Int, numClients: Int) {
         this.numServers = numServers
@@ -49,7 +65,10 @@ object Master {
         Thread sleep 1000
     }
 
-    def handle(input: String): Unit = handle(input split " ")
+    def handle(input: String) {
+        println(s"handling $input")
+        handle(input split " ")
+    }
 
     def handle(inputWords: Array[String]) {
         inputWords(0) match {
@@ -86,14 +105,14 @@ object Master {
             case "allClear" ⇒
                 var clear = false
                 var i = 1
-                while (i < 100 && !clear) {
+                while (i < 200 && !clear) {
                     /* continue iff any proposals have been proposed but not decided */
                     val totalProposals = clients.values.map(_.proposals.values.size).sum
                     clear = clients.values.forall(_.chatLog.size == totalProposals)
                     if (!clear) Thread sleep 20
                     i += 1
                 }
-                if (!clear) throw new RuntimeException("waited 2 sec, but still not 'all clear'!")
+                if (!clear) throw new RuntimeException("waited 4 sec, but still not 'all clear'!")
 
 
             /* Immediately crash the server specified by nodeIndex */
@@ -101,7 +120,7 @@ object Master {
                 val nodeIndex = inputWords(1).toInt
                 ???
 
-            /* TODO Restart the server specified by nodeIndex */
+            /* Restart the server specified by nodeIndex */
             case "restartServer" ⇒
                 val nodeIndex = inputWords(1).toInt
                 ???
@@ -112,7 +131,7 @@ object Master {
              */
             case "timeBombLeader" ⇒
                 val numMsgs: Int = inputWords(1).toInt
-                ???
+                getLeader setTimebombAfter numMsgs
         }
     }
 

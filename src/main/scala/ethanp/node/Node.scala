@@ -76,22 +76,14 @@ abstract class Node(nodeIdx: Int) extends Runnable {
 
     def myConnObj: NodeConnection
 
-    def kill() {
-        alive = false
-    }
-
     def offset: Int
 
-    def restart() {
-        kill()
-        startListening()
-    }
 
     override def run() {
-        while (alive) {
+        while (true) {
             Thread.sleep(10)
             getMsg match {
-                case Some((x,y)) ⇒ handle(x, y)
+                case Some((x,y)) ⇒ if (alive) handle(x, y)
                 case None ⇒ // Do nothing
             }
         }
@@ -107,8 +99,6 @@ abstract class Node(nodeIdx: Int) extends Runnable {
         }
         None // nothing was found
     }
-
-    def init()
 
     def handle(msg: Msg, senderPort: PID): Unit
 

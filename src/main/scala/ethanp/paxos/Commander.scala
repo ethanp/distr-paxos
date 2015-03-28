@@ -25,6 +25,7 @@ class Commander(val pValue: PValue, leader: Leader) {
         if (pValResponse.pValue.ballot == pValue.ballot) {
             needResponsesFrom remove pValResponse.nodeID
             if (needResponsesFrom.size <= responseThreshold) {
+                println(s"${leader.myID} decided on $pValue")
                 val dec = Decision(pValue.slotProp)
                 leader.server.replica receiveDecision dec
                 leader.server broadcastServers dec
@@ -32,6 +33,7 @@ class Commander(val pValue: PValue, leader: Leader) {
             }
         }
         else {
+            println(s"commander ${leader.myID} was preempted before getting $pValue decided")
             exit()
             leader preempt pValResponse.pValue.ballot
         }

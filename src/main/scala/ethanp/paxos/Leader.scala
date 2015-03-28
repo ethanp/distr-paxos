@@ -24,8 +24,11 @@ class Leader(val server: Server) {
      *
      * This excludes heartbeat messages if you use them.
      */
-    @volatile var timeBomb = 0
-    def setTimebombAfter(numMsgs: Int) { timeBomb = numMsgs }
+    @volatile var timeBomb = -1
+    def setTimebombAfter(numMsgs: Int) {
+        if (numMsgs == 0) server.crash()
+        else timeBomb = numMsgs
+    }
 
     /* Fields **/
     var ballotNum = Ballot firstFor myID
@@ -78,14 +81,6 @@ class Leader(val server: Server) {
         }
     }
 
-    /** TODO I need to verify that this makes sense since I do end up voting for myself too!
-      *
-      * I did it a little bit differently for the Commander,
-      * and I think that way makes more sense.
-      *
-      *     * E.g. including myself in the responses that I am initially waiting for
-      *         * And adjusting the number of responses that I need accordingly
-      */
     def receiveVoteResponse(response: VoteResponse) {
         if (currentScout == null) {
             println(s"$myID ignoring vote response")
@@ -115,12 +110,22 @@ class Leader(val server: Server) {
         if (activeLeaderID != myID && heartbeatThread != null) heartbeatThread.interrupt()
         println(s"$myID got elected")
         bigPlus(proposals, currentScout.pvalues.toSet)
-        active = true // this will cancel any outstanding HeartbeatExpector
         activeLeaderID = myID
 
         /* start heartbeating */
         heartbeatThread = new Thread(new Heartbeater)
         heartbeatThread.start()
+
+        // The paper has this AFTER spawning the commanders, but I says that makes nonsense
+        active = true // this will cancel any outstanding HeartbeatExpector
+
+        /* send out all existing proposals
+         * (seems mighty inefficient, as some may have been decided already) */
+        for (p ← proposals) {
+            val pValue = PValue(ballotNum, p)
+            ongoingCommanders += (p → new Commander(pValue, this))
+            ongoingCommanders(p).broadcastProposal()
+        }
     }
 
     /** TODO this surely makes no sense
@@ -160,7 +165,12 @@ class Leader(val server: Server) {
         override def run() {
             while (!active && !Thread.interrupted()) {
                 val startedWaiting = LocalTime.now
-                Thread sleep Common.heartbeatTimeout
+                try Thread sleep Common.heartbeatTimeout
+                catch {
+                    case e: InterruptedException ⇒
+                        println(s"$myID's heartbeat expector interrupted")
+                        return
+                }
                 if (lastHeartbeat isBefore startedWaiting) {
                     println(s"$myID timedOut on leader $activeLeaderID")
                     spawnScout()
