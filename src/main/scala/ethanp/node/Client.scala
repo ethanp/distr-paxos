@@ -17,7 +17,8 @@ class Client(nodeID: Int) extends Node(nodeID) {
 
     val proposals = mutable.Map[Int, StoredProposal]()
 
-    def printLog() = chatLog foreach { case (k, v) ⇒ println(s"$k ${v.senderID} ${v.text}") }
+    def printLog() =
+        chatLog.toSeq.sortBy(_._1).foreach(i ⇒ println(s"${i._1} ${i._2.senderID} ${i._2.text}"))
 
     override def offset = Common.clientOffset
 
@@ -46,7 +47,13 @@ class Client(nodeID: Int) extends Node(nodeID) {
                 if (clientProp.kID == nodeID) {
                     proposals.get(clientProp.propID).get.responded = true
                 }
-                chatLog.put(idx, ChatLogItem(clientProp.kID, clientProp.text))
+                val item = ChatLogItem(clientProp.kID, clientProp.text)
+                if (chatLog get idx map (_ == item) getOrElse true) {
+                    chatLog.put(idx, item)
+                } else {
+                    throw new RuntimeException(
+                      s"c $nodeID rcvd $msg but already has ${chatLog(idx)} there")
+                }
 
             /* UNIMPLEMENTED */
             case AllClear => ???

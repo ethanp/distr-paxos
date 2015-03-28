@@ -47,7 +47,11 @@ class Leader(val server: Server) {
     }
 
     def propose(proposal:  SlotProp) {
-        if ((proposals add proposal) && active) {
+
+        val unproposed = proposals.forall(_.clientProp != proposal.clientProp)
+
+        if (unproposed && active) {
+            proposals add proposal
             println(s"$myID issuing commander")
             val pValue = PValue(ballotNum, proposal)
             ongoingCommanders += (proposal → new Commander(pValue, this))

@@ -22,6 +22,6 @@ object Common {
     val logStartup = false
     def printStartup(x: Any) = if (logStartup) println(x)
 
-    val logHeartbeats = true
+    val logHeartbeats = false
     def printHeartbeat(s: Any) = if (logHeartbeats) println(s)
 }
