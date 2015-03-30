@@ -19,7 +19,7 @@ class Client(nodeID: Int) extends Node(nodeID) {
     val proposals = mutable.Map[Int, StoredProposal]()
 
     def printLog() =
-        chatLog.toSeq.sortBy(_._1).foreach(i ⇒ println(s"${i._1} ${i._2.senderID} ${i._2.text}"))
+        chatLog.toSeq.sortBy(_._1).foreach(i ⇒ println(s"${i._1-1} ${i._2.senderID}: ${i._2.text}"))
 
     override def offset = Common.clientOffset
 
@@ -41,7 +41,7 @@ class Client(nodeID: Int) extends Node(nodeID) {
     }
 
     override def handle(msg: Msg, senderPort: Int) {
-        println(s"client $nodeID rcvd $msg from $senderPort")
+        Common.printlnGen(s"client $nodeID rcvd $msg from $senderPort")
         msg match {
             case PrintLog => printLog()
             case SlotProp(idx, clientProp) ⇒

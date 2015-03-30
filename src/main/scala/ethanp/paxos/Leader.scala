@@ -3,6 +3,7 @@ package ethanp.paxos
 import java.time.LocalTime
 
 import ethanp.node.Server
+import ethanp.system.Common.printlnGen
 import ethanp.system._
 
 import scala.collection.mutable
@@ -22,7 +23,7 @@ class Leader(val server: Server) {
     def bombTick() {
         if (timeBomb > 0) {
             timeBomb -= 1 // for the local "send"
-            println (s"$myID ticked, now at $timeBomb")
+            printlnGen(s"$myID ticked, now at $timeBomb")
         }
     }
 
@@ -67,7 +68,7 @@ class Leader(val server: Server) {
 
         if (unproposed && active) {
             proposals add proposal
-            println(s"$myID issuing commander")
+            printlnGen(s"$myID issuing commander")
             val pValue = PValue(ballotNum, proposal)
             ongoingCommanders += (proposal → new Commander(pValue, this))
             ongoingCommanders(proposal).broadcastProposal()
@@ -76,13 +77,13 @@ class Leader(val server: Server) {
     }
 
     def spawnScout() {
-        println(s"$myID is running for office")
+        printlnGen(s"$myID is running for office")
         currentScout = new Scout(ballotNum, this)
     }
 
     def preempt(ballot: Ballot) {
         if (ballot > ballotNum) {
-            println(s"$myID preempted by ${ballot.nodeID}, capitulating")
+            printlnGen(s"$myID preempted by ${ballot.nodeID}, capitulating")
 
             // cancel outstanding heartbeater
             if (heartbeatThread != null && heartbeatThread.isAlive)
@@ -99,14 +100,14 @@ class Leader(val server: Server) {
             heartbeatThread.start()
         }
         else {
-            println(s"$myID can't capitulate, ballot too low. Is this an ERROR? spawning scout")
+            printlnGen(s"$myID can't capitulate, ballot too low. Is this an ERROR? spawning scout")
             if (active) spawnScout()
         }
     }
 
     def receiveVoteResponse(response: VoteResponse) {
         if (currentScout == null) {
-            println(s"$myID ignoring vote response")
+            printlnGen(s"$myID ignoring vote response")
             return
         }
 
@@ -117,7 +118,7 @@ class Leader(val server: Server) {
     def receivePValResp(response: PValResponse) {
         ongoingCommanders.get(response.pValue.slotProp) match {
             case Some(commander) => commander receivePValResponse response
-            case None => println(s"$myID ignoring response for non-existent commander")
+            case None => printlnGen(s"$myID ignoring response for non-existent commander")
         }
     }
 
@@ -131,7 +132,7 @@ class Leader(val server: Server) {
      */
     def gotElected() {
         if (activeLeaderID != myID && heartbeatThread != null) heartbeatThread.interrupt()
-        println(s"$myID got elected")
+        printlnGen(s"$myID got elected")
         bigPlus(proposals, currentScout.pvalues.toSet)
         activeLeaderID = myID
 
@@ -171,7 +172,7 @@ class Leader(val server: Server) {
                 try Thread sleep Common.heartbeatTimeout * 2/3
                 catch {
                     case e: InterruptedException ⇒
-                        println(s"$myID heartbeater interrupted, stopping heartbeats.")
+                        printlnGen(s"$myID heartbeater interrupted, stopping heartbeats.")
                         return
                 }
                 server broadcastServers Heartbeat(myID, ballotNum)
@@ -186,11 +187,11 @@ class Leader(val server: Server) {
                 try Thread sleep Common.heartbeatTimeout
                 catch {
                     case e: InterruptedException ⇒
-                        println(s"$myID's heartbeat expector interrupted")
+                        printlnGen(s"$myID's heartbeat expector interrupted")
                         return
                 }
                 if (lastHeartbeat isBefore startedWaiting) {
-                    println(s"$myID timedOut on leader $activeLeaderID")
+                    printlnGen(s"$myID timedOut on leader $activeLeaderID")
                     spawnScout()
                     return
                 }

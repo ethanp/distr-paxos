@@ -4,7 +4,7 @@ import java.io.{ObjectInputStream, ObjectOutputStream}
 import java.net.Socket
 import java.util.concurrent.ConcurrentLinkedQueue
 
-import ethanp.system.Common.printStartup
+import ethanp.system.Common.{printStartup, printlnGen}
 import ethanp.system.{Heartbeat, Msg, NodeConnection}
 
 /**
@@ -34,7 +34,7 @@ class MsgBuff(val socket: Socket, val localLPort: Int) extends Runnable {
             msg match {
                 case x: Heartbeat ⇒ ; // ignore
                 case x: NodeConnection ⇒ printStartup(s)
-                case _ ⇒ println(s)
+                case _ ⇒ printlnGen(s)
             }
             oos writeObject msg
             oos.flush()
@@ -56,7 +56,7 @@ class MsgBuff(val socket: Socket, val localLPort: Int) extends Runnable {
             val rcvdMsg = ois.readObject().asInstanceOf[Msg] // this is where we block
             inBuff offer rcvdMsg
             if (inBuff.size() > 5) {
-                println(s"MsgBuff $remoteLPort -> $localLPort has ${inBuff.size()} msgs")
+                printlnGen(s"MsgBuff $remoteLPort -> $localLPort has ${inBuff.size()} msgs")
             }
         }
     }

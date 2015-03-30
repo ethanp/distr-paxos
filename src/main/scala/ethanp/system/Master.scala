@@ -37,7 +37,7 @@ object Master {
                 }
             }
         }
-        println("no hay un jefe ahora señor")
+        printlnGen("no hay un jefe ahora señor")
         null
     }
 
@@ -71,7 +71,7 @@ object Master {
     }
 
     def handle(input: String) {
-        println(s"handling $input")
+        printlnGen(s"handling $input")
         handle(input split " ")
     }
 
@@ -165,5 +165,6 @@ object Master {
     def main(args: Array[String]) {
         val scan = new Scanner(System in)
         while (scan hasNextLine) handle (scan nextLine)
+        System exit 0
     }
 }

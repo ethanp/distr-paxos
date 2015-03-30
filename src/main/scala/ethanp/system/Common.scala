@@ -6,6 +6,7 @@ package ethanp.system
  */
 object Common {
 
+
     type PID = Int
 
     val leaderID: PID = 1
@@ -18,6 +19,9 @@ object Common {
     def clientPortFromPid(pid : PID) = pid + clientOffset
 
     val heartbeatTimeout: Long = 200
+
+    val logGen = false
+    def printlnGen(x: Any) = if (logGen) println(x)
 
     val logStartup = false
     def printStartup(x: Any) = if (logStartup) println(x)

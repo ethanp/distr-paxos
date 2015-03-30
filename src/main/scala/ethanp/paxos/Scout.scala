@@ -27,9 +27,13 @@ class Scout(var ballot: Ballot, leader: Leader) {
         // local acceptor should "vote" for this scout
         acceptor.ballotNum = ballot
         receiveVoteResponse(VoteResponse(leader.myID, ballot, acceptor.accepted.toSet))
+        leader.bombTick()
 
-        // local accepted, so ask everyone else
-        leader.server.broadcastServers(VoteRequest(leader.server.nodeID, leader.ballotNum))
+        if (leader.timeBomb == 0)
+            leader.server.crash()
+        else
+            // local accepted, so ask everyone else
+            leader.server.broadcastServers(VoteRequest(leader.server.nodeID, leader.ballotNum))
     }
 
     /**

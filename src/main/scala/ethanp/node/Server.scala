@@ -22,7 +22,7 @@ class Server(val nodeID: Int) extends Node(nodeID) {
      * 5. replica, leader, and acceptor are discarded
      */
     def crash() {
-        println(s"server $nodeID crashing!")
+        printlnGen(s"server $nodeID crashing!")
 
         // 2
         alive = false
@@ -49,7 +49,7 @@ class Server(val nodeID: Int) extends Node(nodeID) {
      * 3. resume receiving incoming NodeConnections
      */
     def restart() {
-        println(s"server $nodeID restarting")
+        printlnGen(s"server $nodeID restarting")
 
         // 1
         replica = new Replica(this)
@@ -80,7 +80,7 @@ class Server(val nodeID: Int) extends Node(nodeID) {
         val s = s"server $nodeID rcvd $msg from $senderPort"
         msg match {
             case m: Heartbeat ⇒ printHeartbeat(s)
-            case _ ⇒ println(s)
+            case _ ⇒ printlnGen(s)
         }
         msg match {
             case proposal@ClientProp(_,_,_)     ⇒ replica propose proposal
@@ -114,5 +114,5 @@ class Server(val nodeID: Int) extends Node(nodeID) {
 
     def tickSend(b: MsgBuff, msg: Msg) =
         if (leader != null) leader.tickSend(b, msg)
-        else println(s"$nodeID can't send, already crashed")
+        else printlnGen(s"$nodeID can't send, already crashed")
 }
