@@ -21,7 +21,10 @@ class Commander(val pValue: PValue, leader: Leader) {
         leader.server.acceptor receivePValProp prop // locally
 
         // If there's a timebomb ticking, act accordingly
-        if (!leader.bombTick)
+        leader bombTick()
+        if (leader.timeBomb == 0)
+            leader.server.crash()
+        else
             leader.server broadcastServers prop // remotely
     }
 

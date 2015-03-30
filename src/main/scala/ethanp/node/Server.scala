@@ -101,7 +101,18 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     }
 
     override def broadcast(buffs: Iterable[MsgBuff], msg: Msg): Unit =
-        for (b ← buffs)
-            if (!leader.bombTick) b send msg
-            else return
+        this.synchronized {
+            for (b ← buffs) {
+                msg match {
+                    case VoteRequest(_, _) ⇒ tickSend(b, msg)
+                    case PValProp(_, _) ⇒ tickSend(b, msg)
+                    case _ ⇒ b send msg
+                }
+            }
+        }
+
+
+    def tickSend(b: MsgBuff, msg: Msg) =
+        if (leader != null) leader.tickSend(b, msg)
+        else println(s"$nodeID can't send, already crashed")
 }

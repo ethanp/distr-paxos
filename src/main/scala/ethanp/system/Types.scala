@@ -10,18 +10,15 @@ import ethanp.system.Common.PID
 sealed abstract class Msg extends Serializable
 
 /* FOR GIVEN TESTS */
-case object PrintLog extends Msg
-case object AllClear extends Msg
-case object Crash extends Msg
-case class LeaderTimeBomb(numMsgs: Int) extends Msg
+case object PrintLog extends Msg    // master -> client
 
-case class ClientProp(kID: PID, propID: Int, text: String) extends Msg
-case class SlotProp(idx: Int, clientProp: ClientProp) extends Msg     // "proposal"
-case class PValue(ballot: Ballot, slotProp: SlotProp) extends Msg
+case class ClientProp(kID: PID, propID: Int, text: String) extends Msg // client -> replicas
+case class SlotProp(idx: Int, clientProp: ClientProp) extends Msg      // "proposal" replica -> leaders
 
 /* PROPOSALS */
-case class PValProp(commanderID: PID, pValue: PValue) extends Msg     // sent for "p2a"
-case class PValResponse(nodeID: PID, pValue: PValue) extends Msg // sent for "p2b
+case class PValue(ballot: Ballot, slotProp: SlotProp) extends Msg
+case class PValProp(commanderID: PID, pValue: PValue) extends Msg     // "p2a" commander -> acceptors
+case class PValResponse(nodeID: PID, pValue: PValue) extends Msg      // "p2b" acceptors -> commander
 
 case class Decision(slotProp: SlotProp) extends Msg
 
@@ -32,8 +29,8 @@ case class ServerConnection(nodeId: PID) extends NodeConnection(nodeId)
 
 /* FOR ELECTIONS */
 case class Preempted(ballot: Ballot) extends Msg
-case class VoteRequest(nodeID: PID, ballot: Ballot) extends Msg
-case class VoteResponse(nodeID: PID, ballot: Ballot, accepteds: Set[PValue]) extends Msg
+case class VoteRequest(nodeID: PID, ballot: Ballot) extends Msg     // "p1a" scout -> acceptors
+case class VoteResponse(nodeID: PID, ballot: Ballot, accepteds: Set[PValue]) extends Msg // "p1b" acceptors -> scout
 
 /* OPTIMIZATION MESSAGES */
 case class Heartbeat(nodeID: PID, ballot: Ballot) extends Msg

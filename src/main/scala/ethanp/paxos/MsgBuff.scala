@@ -36,7 +36,7 @@ class MsgBuff(val socket: Socket, val localLPort: Int) extends Runnable {
                 case x: NodeConnection ⇒ printStartup(s)
                 case _ ⇒ println(s)
             }
-            oos.writeObject(msg)
+            oos writeObject msg
             oos.flush()
         }
     }
@@ -44,9 +44,9 @@ class MsgBuff(val socket: Socket, val localLPort: Int) extends Runnable {
     def blockTillMsgRcvd(): Msg = {
         for (i ← 1 to 100) {
             val msg = readMsgIfAvailable()
-            if (msg.isDefined)
+            if (msg isDefined)
                 return msg.get
-            Thread.sleep(20)
+            Thread sleep 20
         }
         throw new RuntimeException("Msg never received (waited 2 seconds)")
     }
@@ -54,7 +54,7 @@ class MsgBuff(val socket: Socket, val localLPort: Int) extends Runnable {
     def run() {
         while (alive) {
             val rcvdMsg = ois.readObject().asInstanceOf[Msg] // this is where we block
-            inBuff.offer(rcvdMsg)
+            inBuff offer rcvdMsg
             if (inBuff.size() > 5) {
                 println(s"MsgBuff $remoteLPort -> $localLPort has ${inBuff.size()} msgs")
             }
@@ -67,7 +67,7 @@ class MsgBuff(val socket: Socket, val localLPort: Int) extends Runnable {
     }
 
     def readMsgIfAvailable(): Option[Msg] = {
-        if (inBuff.isEmpty) None
+        if (inBuff isEmpty) None
         else Some(inBuff.poll())
     }
 }

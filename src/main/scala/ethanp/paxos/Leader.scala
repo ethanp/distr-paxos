@@ -12,6 +12,20 @@ import scala.collection.mutable
  * 3/25/15
  */
 class Leader(val server: Server) {
+    def tickSend(buff: MsgBuff, msg: Msg) = {
+        bombTick()
+        buff send msg
+        if (timeBomb == 0)
+            server.crash()
+    }
+
+    def bombTick() {
+        if (timeBomb > 0) {
+            timeBomb -= 1 // for the local "send"
+            println (s"$myID ticked, now at $timeBomb")
+        }
+    }
+
 
     import Leader._
     val myID = server.nodeID
@@ -46,13 +60,6 @@ class Leader(val server: Server) {
             if (activeLeaderID == LEADER_UNKNOWN) spawnScout()
         }
     }
-
-    /** @return true iff we just crashed */
-    def bombTick: Boolean = if (timeBomb > 0) {
-        timeBomb -= 1  // for the local "send"
-        if (timeBomb == 0) server.crash()
-        timeBomb == 0
-    } else false
 
     def propose(proposal:  SlotProp) {
 
@@ -144,24 +151,9 @@ class Leader(val server: Server) {
         }
     }
 
-    /** TODO this surely makes no sense
-      *
-      * There's gotta be a bunch of cases in here!
-      *
-      * 1. For example what if someone times out on my heartbeats, gets elected, and starts
-      *    sending me heartbeats?
-      *
-      *      * Well surely, I should capitulate (and don't call me Shirley).
-      *
-      *
-      * 2. There's probably a bunch more cases like this too that I'll need to handle
-      *
-      *      * I guess I'll just get to that when I get to that; right now I'm implementing
-      *        PAXOS, not some heart-bleeding bull-crap.
-      *
-      *      * My guess is that I'll have to include a ballot number in the heartbeat.
-      *      * Worst comes to worst, I'll take a gander at the ol' Raft paper.
-      */
+    /**
+     * Warning: I may have missed some cases in here
+     */
     def receiveHeartbeat(heartbeat: Heartbeat) {
         if (heartbeat.ballot > ballotNum) {
             preempt(heartbeat.ballot)
