@@ -19,7 +19,8 @@ class ClientSpec_M1 extends WordSpec {
     "A Client" when {
         "sent message" should {
             "store the proposal" in {
-                assert(Master.clients(0).proposals.get(1).get == StoredProposal("helloWorld"))
+                val storedProposal_1 = Master.clients(0).proposals.get(1).get
+                assert(storedProposal_1 == StoredProposal("helloWorld", responded = true))
             }
             "send proposal to all servers" in {
                 Thread.sleep(300)

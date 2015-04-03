@@ -66,12 +66,14 @@ class Leader(val server: Server) {
 
         val unproposed = proposals.forall(_.clientProp != proposal.clientProp)
 
-        if (unproposed && active) {
+        if (unproposed) {
             proposals add proposal
-            printlnGen(s"$myID issuing commander")
-            val pValue = PValue(ballotNum, proposal)
-            ongoingCommanders += (proposal → new Commander(pValue, this))
-            ongoingCommanders(proposal).broadcastProposal()
+            if (active) {
+                printlnGen(s"$myID issuing commander")
+                val pValue = PValue(ballotNum, proposal)
+                ongoingCommanders += (proposal → new Commander(pValue, this))
+                ongoingCommanders(proposal).broadcastProposal()
+            }
         }
         else if (activeLeaderID == LEADER_UNKNOWN) spawnScout()
     }
