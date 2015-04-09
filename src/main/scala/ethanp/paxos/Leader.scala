@@ -194,6 +194,7 @@ class Leader(val server: Server) {
                 }
                 if (lastHeartbeat isBefore startedWaiting) {
                     printlnGen(s"$myID timedOut on leader $activeLeaderID")
+                    Thread.sleep((Master.numServers - myID) * 100)
                     spawnScout()
                     return
                 }

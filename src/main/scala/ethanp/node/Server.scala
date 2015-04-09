@@ -15,29 +15,28 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     var acceptor = new Acceptor(this)
 
     /**
-     * 1. (actually nevermind) the NodeServer-Thread will stop receiving incoming NodeConnections
-     * 2. the Node-Thread will stop reading incoming messages, simply discarding them instead
-     * 3. any outstanding Commanders and Scouts are slaughtered
-     * 4. any outstanding heartbeats are cancelled
-     * 5. replica, leader, and acceptor are discarded
+     * 1. the Node-Thread will stop reading incoming messages, simply discarding them instead
+     * 2. any outstanding Commanders and Scouts are immediately slaughtered
+     * 3. any outstanding heartbeats are cancelled
+     * 4. replica, leader, and acceptor are discarded
      */
     def crash() {
         printlnGen(s"server $nodeID crashing!")
 
-        // 2
+        // 1
         alive = false
 
-        // 3
+        // 2
         leader.currentScout = null
         leader.ongoingCommanders.clear()
 
-        // 4
+        // 3
         if (leader.heartbeatThread != null) {
             leader.heartbeatThread.interrupt()
             leader.heartbeatThread = null
         }
 
-        // 5
+        // 4
         leader = null
         replica = null
         acceptor = null
@@ -46,9 +45,12 @@ class Server(val nodeID: Int) extends Node(nodeID) {
     /**
      * 1. replica, leader, and acceptor are renewed
      * 2. stop discarding incoming messages
-     * 3. resume receiving incoming NodeConnections
+     * 3. resume receiving incoming NodeConnections (shouldn't matter)
      */
     def restart() {
+        if (alive) {
+            println(s"server $nodeID is already alive")
+        }
         printlnGen(s"server $nodeID restarting")
 
         // 1
