@@ -23,7 +23,9 @@ class Acceptor(server: Server) {
         if (server.leader.active && request.ballot > server.leader.ballotNum)
             server.leader preempt request.ballot
 
-        server.sendServer(request.nodeID, VoteResponse(server.nodeID, ballotNum, accepted.toSet))
+        server.sendServer(request.nodeID,
+                          VoteResponse(server.nodeID, ballotNum, accepted.toSet,
+                                       server.replica.decisions.toMap))
     }
 
     /* P2A */

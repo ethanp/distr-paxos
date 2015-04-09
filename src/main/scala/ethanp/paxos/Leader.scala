@@ -108,6 +108,8 @@ class Leader(val server: Server) {
     }
 
     def receiveVoteResponse(response: VoteResponse) {
+        server.replica.decisions ++= response.decisions
+
         if (currentScout == null) {
             printlnGen(s"$myID ignoring vote response")
             return
@@ -135,7 +137,8 @@ class Leader(val server: Server) {
     def gotElected() {
         if (activeLeaderID != myID && heartbeatThread != null) heartbeatThread.interrupt()
         printlnGen(s"$myID got elected")
-        bigPlus(proposals, currentScout.pvalues.toSet)
+        val rcvdSet = currentScout.pvalues.toSet
+        bigPlus(proposals, rcvdSet)
         activeLeaderID = myID
 
         /* start heartbeating */

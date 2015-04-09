@@ -30,7 +30,7 @@ case class ServerConnection(nodeId: PID) extends NodeConnection(nodeId)
 /* FOR ELECTIONS */
 case class Preempted(ballot: Ballot) extends Msg
 case class VoteRequest(nodeID: PID, ballot: Ballot) extends Msg     // "p1a" scout -> acceptors
-case class VoteResponse(nodeID: PID, ballot: Ballot, accepteds: Set[PValue]) extends Msg // "p1b" acceptors -> scout
+case class VoteResponse(nodeID: PID, ballot: Ballot, accepteds: Set[PValue], decisions: Map[Int, ClientProp]) extends Msg // "p1b" acceptors -> scout
 
 /* OPTIMIZATION MESSAGES */
 case class Heartbeat(nodeID: PID, ballot: Ballot) extends Msg

@@ -64,6 +64,9 @@ class Server(val nodeID: Int) extends Node(nodeID) {
         // 3
         serverThread.resume()
 
+        // retrieve the collected memory of the other servers
+        leader.spawnScout()
+
     }
 
     def sendClient(id: PID, msg: Msg) = clientBuffs(id) send msg
@@ -92,7 +95,7 @@ class Server(val nodeID: Int) extends Node(nodeID) {
 
             /* p1a, p1b */
             case voteReq@VoteRequest(_,_)       ⇒ acceptor receiveVoteRequest voteReq
-            case voteResp@VoteResponse(_,_,_)   ⇒ leader receiveVoteResponse voteResp
+            case voteResp@VoteResponse(_,_,_,_) ⇒ leader receiveVoteResponse voteResp
 
             /* p2a, p2b */
             case pProp@PValProp(_,_)            ⇒ acceptor receivePValProp pProp
