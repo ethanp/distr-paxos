@@ -26,7 +26,7 @@ class Scout(var ballot: Ballot, leader: Leader) {
     else {
         // local acceptor should "vote" for this scout
         acceptor.ballotNum = ballot
-        receiveVoteResponse(VoteResponse(leader.myID, ballot, acceptor.accepted.toSet))
+        receiveVoteResponse(VoteResponse(leader.myID, ballot, acceptor.accepted.toSet, leader.server.replica.decisions.toMap))
         leader.bombTick()
 
         if (leader.timeBomb == 0)

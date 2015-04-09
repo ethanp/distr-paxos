@@ -19,7 +19,8 @@ class Client(nodeID: Int) extends Node(nodeID) {
     val proposals = mutable.Map[Int, StoredProposal]()
 
     def printLog() =
-        chatLog.toSeq.sortBy(_._1).foreach(i ⇒ println(s"${i._1-1} ${i._2.senderID}: ${i._2.text}"))
+        chatLog.toSeq.sortBy(_._1).foreach(i ⇒
+            println(s"${i._1-1} ${i._2.senderID}: ${i._2.text}"))
 
     override def offset = Common.clientOffset
 

@@ -83,8 +83,10 @@ class SimpleTest2Spec extends WordSpec with MsgSpec {
   val t = "helloWorld"
   val clientProp = ClientProp(0, 1, t)
   val slotProp = SlotProp(1, clientProp)
-  val ballot = Ballot(0, 2)
-  val pVal = PValue(ballot, slotProp)
+
+  /* we can't assume that a particular ballot is going to be used */
+//  val ballot = Ballot(0, 2)
+//  val pVal = PValue(ballot, slotProp)
 
   handle("start 5 2")
   handle("sendMessage 0 helloWorld")

@@ -110,25 +110,28 @@ object Master {
             case "allClear" ⇒
                 var clear = false
                 var i = 1
-                while (i < 200 && !clear) {
+                while (i < 1000 && !clear) {
                     /* continue iff any proposals have been proposed but not decided */
                     val totalProposals = clients.values.map(_.proposals.values.size).sum
                     val chatLogSizes = clients.values map (_.chatLog.size)
                     val proposalsDecided = chatLogSizes forall (_ >= totalProposals)
 
+                    val liveServers = servers.values.filter(_.alive).toList
                     val leaderAgreement = {
                         if (getLeader == null) false
                         else {
-                            servers.values.filter(_.alive)
-                                    .forall(_.leader.activeLeaderID == getLeader.myID)
+                            val leaderIDs = liveServers.map(_.leader.activeLeaderID)
+                            val supposedLeader: PID = getLeader.myID
+                            leaderIDs.forall(_ == supposedLeader)
                         }
                     }
 
-                    clear = proposalsDecided && leaderAgreement
+                    val serversHalfDead: Boolean = liveServers.size < Math.ceil(numServers / 2.0)
+                    clear = proposalsDecided && (leaderAgreement || serversHalfDead)
                     if (!clear) Thread sleep 20
                     i += 1
                 }
-                if (!clear) throw new RuntimeException("waited 4 sec, but still not 'all clear'!")
+                if (!clear) throw new RuntimeException("waited 20 sec, but still not 'all clear'!")
 
 
             /* Immediately crash the server specified by nodeIndex */
